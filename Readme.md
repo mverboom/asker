@@ -70,19 +70,25 @@ The following configuration items are available in this section:
 
 Name is the name of the configuration. This name is used to display in the generated screens.
 
-Example: name = "Test case"
+Example
+Assign the name Test case to the configuration.
+`name = "Test case"`
 
 ### begin (mandatory)
 
 Begin refers to the defenition of the screen at which the configuration should start.
 
-Example: name = main
+Example
+Start at the screen named main.
+`name = main`
 
 ### css (optional)
 
 This refers to a file with a cascading style sheet to change the design of the pages.
 
-Example: css = asker.css
+Example
+Use the file asker.css as the cascading style sheet.
+`css = asker.css`
 
 ## Screen configuration
 
@@ -90,40 +96,41 @@ There can be loads of screens in a single configuration file (maybe it is better
 
 A screen starts at the defenition of a new section heading (with the exception of the start section as discussed previously).
 
-Within and between screens variables can be used.
+Example
+Start a screen with with the name main.
+`[main]`
 
 Each screen can have the following configuration items
 
 ### title (mandatory)
 
-This is a description of the specific screen and is used to display on the scren.
+This is a description of the specific screen and is used to display on the screen.
 
-Example: title = "This is the first screen"
+Example
+Set the title of the scren to This is the first screen
+`title = "This is the first screen"`
 
 ### action (optional)
 
-An action defines a command that needs to be executed. There can only be one action per screen.
+An action defines a command that needs to be executed. There can only be one action per screen. When a screen has an action defined, the action will be run before any of the information in the screen is displayed.
 
 The command will always run in the background. When running an action the webbrowser will be served with a bit of javascript which periodically will poll the server to see if the task has already completed. This works around webserver timeout problems with long running tasks.
 
-An action is split into two fields, seperated by a comma:
+Arguments
 
-#### Output type
+(normal|follow)
+Normal will just show a time counter indicating how long the command has been running. When completed it will display the screen. Follow will also show the time counter and show the output of the command while it is running. After the command has completed it will display the screen.
 
-The output type is the way the output of the command is processed. 
-
-- normal: With the task running in the background you can configure the webbrowser to only show a time counter indicating the time that the command has been running.
-- follow: With the task running in the brackground the webbrowser will show the output of the command in the browser as it is running.
-
-#### Command
-
-This can be any command which the user running the webserver can execute.
+command
+The command to run. It is possible to use variables when defining the command.
 
 Examples
-Generate a process list and display the amount of time that has elapsed:
+Generate a process list and display the amount of time that has elapsed
 `action = normal,ps -ef`
-Create a directory listing and sleep 5 seconds with the output showing on screen:
+Create a directory listing and sleep 5 seconds with the output showing on screen
 `action = follow,ls -al;sleep 5`
+Run the command the user has entered in a previous screen and is in the variable CMD
+`action = normal,%CMD%
 
 ### item[] (optional)
 
