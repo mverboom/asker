@@ -26,10 +26,10 @@ Asker has only been tested on Debian/Linux at this moment. Currently it has been
 
 Asker will try and check if the connection to the webserver is encrypted and you have basic authentication running. If you don't it will complain. You can overrule this behaviour in the asker.php file. Just edit the file and look at the top of the file for:
 
-```
+`
 $OVERRULE_SSL=false;
 $OVERRULE_AUTH=false;
-```
+`
 
 Change them to true if you want to overrule either or both checks.
 
@@ -62,7 +62,7 @@ is a variable. Variables can be choosen to be any letter/number combination, exc
 
 Each configuration file has a global configuration part. which is called
 
-```[start]```
+`[start]`
 
 The following configuration items are available in this section:
 
@@ -121,9 +121,9 @@ This can be any command which the user running the webserver can execute.
 
 Examples
 Generate a process list and display the amount of time that has elapsed:
-```action = normal,ps -ef```
+`action = normal,ps -ef`
 Create a directory listing and sleep 5 seconds with the output showing on screen:
-```action = follow,ls -al;sleep 5```
+`action = follow,ls -al;sleep 5`
 
 ### item[] (optional)
 
