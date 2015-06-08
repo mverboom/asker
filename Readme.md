@@ -41,3 +41,7 @@ root you should be able to start asker with the test configuration:
 http://yourserver/installdir/asker.php?action=test
 
 If you no longer require the test configuration, I would urge you to remove the `test.sh` shellscript that is used in the testcase.
+
+# Configuration
+
+TBD
