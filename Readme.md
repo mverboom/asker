@@ -129,9 +129,11 @@ The command will always run in the background. When running an action the webbro
 **Arguments**
 
 *(normal|follow)*
+
 Normal will just show a time counter indicating how long the command has been running. When completed it will display the screen. Follow will also show the time counter and show the output of the command while it is running. After the command has completed it will display the screen.
 
 *command*
+
 The command to run. It is possible to use variables when defining the command.
 
 **Examples**
@@ -162,7 +164,9 @@ Text is a very basic item. It will display the text following it on the screen.
 
 **Arguments**
 
-- Text to display
+*Text to display*
+
+This is the text to display. Variable substitution is applied to the text.
 
 **Example**
 
@@ -172,11 +176,93 @@ Show text This is a test
 
 Show text Hi with the name of the user in variable USER from previous screen.
 
-`item[] = text,"Hi %USER%"
+`item[] = text,"Hi %USER%"`
 
 #### input
 
-Input will show a free form input field in which the user can fill out text. The text will be assigned to a variable
+Input will show a free form input field in which the user can fill out text. The text will be assigned to a variable which can be used in another screen.
+
+**Arguments**
+
+*Variable name*
+
+This is the name of the variable the input of the user will be assigned to.
+
+*Text to display*
+
+This text will be prepended to the input box. This text can contain variables that will be expanded.
+
+**Example**
+
+Ask the user's name and assign it to variable USER.
+
+`item[] = input,USER,"Enter your name"`
+
+#### showaction
+
+Show action will show the output of the command that was run, so basically the contents of the variable OUTPUT.
+
+**Arguments**
+
+*pre* (optional)
+
+When the argument pre is given the output will be shown pre-formatted.
+
+**Example
+
+Show the output of the action pre-formatted.
+
+`item[] = showaction,pre`
+
+#### select
+
+The select input will show a list of items which the user can make a selection from.
+
+**Arguments**
+
+*Variable*
+
+This is the name of the variable the selection of the user will be assigned to.
+
+*List of items*
+
+As lists can be quite long, the list of items is usually a variable (for example the output of a command). Each item for the list is seperated by a newline. If an item contains a tab character, the part before the tab is used to assign to the variable if the item is choosen. The part after the tab is being shown to the user. This can for example be useful when showing a list of users on a system. Before the tab the login account of the user is used and after the tab the full user name.
+
+*Text to display*
+
+This text will be prepended to the select box. This text can contain variables that will be expanded.
+
+
+**Example
+
+Show a selection box with all usernames previously obtained with an action and assign it to the variable USER.
+
+`item[] = select,%USER%,%OUTPUT%,"Choose user"`
+
+#### checkbox
+
+**Arguments**
+
+*1*
+
+**Example
+
+ex
+
+`item[]`
+
+
+#### button
+
+**Arguments**
+
+*1*
+
+**Example
+
+ex
+
+`item[]`
 
 
 # Screen design
