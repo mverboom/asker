@@ -70,7 +70,7 @@ The following configuration items are available in this section:
 
 Name is the name of the configuration. This name is used to display in the generated screens.
 
-*Example*
+**Example**
 
 Assign the name Test case to the configuration.
 
@@ -80,7 +80,7 @@ Assign the name Test case to the configuration.
 
 Begin refers to the defenition of the screen at which the configuration should start.
 
-*Example*
+**Example**
 
 Start at the screen named main.
 
@@ -90,7 +90,7 @@ Start at the screen named main.
 
 This refers to a file with a cascading style sheet to change the design of the pages.
 
-*Example*
+**Example**
 
 Use the file asker.css as the cascading style sheet.
 
@@ -102,7 +102,7 @@ There can be loads of screens in a single configuration file (maybe it is better
 
 A screen starts at the defenition of a new section heading (with the exception of the start section as discussed previously).
 
-*Example*
+**Example**
 
 Start a screen with with the name main.
 
@@ -114,7 +114,7 @@ Each screen can have the following configuration items
 
 This is a description of the specific screen and is used to display on the screen.
 
-*Example*
+**Example**
 
 Set the title of the scren to This is the first screen
 
@@ -126,15 +126,15 @@ An action defines a command that needs to be executed. There can only be one act
 
 The command will always run in the background. When running an action the webbrowser will be served with a bit of javascript which periodically will poll the server to see if the task has already completed. This works around webserver timeout problems with long running tasks.
 
-*Arguments*
+**Arguments**
 
-/(normal|follow)/
+*(normal|follow)*
 Normal will just show a time counter indicating how long the command has been running. When completed it will display the screen. Follow will also show the time counter and show the output of the command while it is running. After the command has completed it will display the screen.
 
-/command/
+*command*
 The command to run. It is possible to use variables when defining the command.
 
-*Examples*
+**Examples**
 
 Generate a process list and display the amount of time that has elapsed
 
@@ -160,11 +160,11 @@ Below follows a list of different types of items.
 
 Text is a very basic item. It will display the text following it on the screen.
 
-*Arguments*
+**Arguments**
 
 - Text to display
 
-*Example*
+**Example**
 
 Show text This is a test
 
