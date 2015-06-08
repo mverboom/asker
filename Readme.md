@@ -70,24 +70,30 @@ The following configuration items are available in this section:
 
 Name is the name of the configuration. This name is used to display in the generated screens.
 
-Example
+*Example*
+
 Assign the name Test case to the configuration.
+
 `name = "Test case"`
 
 ### begin (mandatory)
 
 Begin refers to the defenition of the screen at which the configuration should start.
 
-Example
+*Example*
+
 Start at the screen named main.
+
 `name = main`
 
 ### css (optional)
 
 This refers to a file with a cascading style sheet to change the design of the pages.
 
-Example
+*Example*
+
 Use the file asker.css as the cascading style sheet.
+
 `css = asker.css`
 
 ## Screen configuration
@@ -96,8 +102,10 @@ There can be loads of screens in a single configuration file (maybe it is better
 
 A screen starts at the defenition of a new section heading (with the exception of the start section as discussed previously).
 
-Example
+*Example*
+
 Start a screen with with the name main.
+
 `[main]`
 
 Each screen can have the following configuration items
@@ -106,8 +114,10 @@ Each screen can have the following configuration items
 
 This is a description of the specific screen and is used to display on the screen.
 
-Example
+*Example*
+
 Set the title of the scren to This is the first screen
+
 `title = "This is the first screen"`
 
 ### action (optional)
@@ -116,20 +126,26 @@ An action defines a command that needs to be executed. There can only be one act
 
 The command will always run in the background. When running an action the webbrowser will be served with a bit of javascript which periodically will poll the server to see if the task has already completed. This works around webserver timeout problems with long running tasks.
 
-Arguments
+*Arguments*
 
-(normal|follow)
+/(normal|follow)/
 Normal will just show a time counter indicating how long the command has been running. When completed it will display the screen. Follow will also show the time counter and show the output of the command while it is running. After the command has completed it will display the screen.
 
-command
+/command/
 The command to run. It is possible to use variables when defining the command.
 
-Examples
+*Examples*
+
 Generate a process list and display the amount of time that has elapsed
+
 `action = normal,ps -ef`
+
 Create a directory listing and sleep 5 seconds with the output showing on screen
+
 `action = follow,ls -al;sleep 5`
+
 Run the command the user has entered in a previous screen and is in the variable CMD
+
 `action = normal,%CMD%
 
 ### item[] (optional)
@@ -144,18 +160,24 @@ Below follows a list of different types of items.
 
 Text is a very basic item. It will display the text following it on the screen.
 
-Arguments:
+*Arguments*
+
 - Text to display
 
-Example: item[] = text,"This is a test"
+*Example*
+
+Show text This is a test
+
+`item[] = text,"This is a test"`
+
+Show text Hi with the name of the user in variable USER from previous screen.
+
+`item[] = text,"Hi %USER%"
 
 #### input
 
 Input will show a free form input field in which the user can fill out text. The text will be assigned to a variable
 
-
-
-#### Command
 
 # Screen design
 
