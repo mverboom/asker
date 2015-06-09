@@ -147,7 +147,7 @@ function startaction($type, $action) {
                   window.location.href=\"asker.php?resumeaction=" . $pid . "\";
             }
          }
-         url=\"https://secure.verboom.net/asker/asker.php?pidcheck=" . $pid . "\";
+         url=\"asker.php?pidcheck=" . $pid . "\";
          if (type == \"follow\")
             url=url + \"&offset=\" + follow;
          ajax.open(\"GET\",url,true);

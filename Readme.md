@@ -26,10 +26,9 @@ Asker has only been tested on Debian/Linux at this moment. Currently it has been
 
 Asker will try and check if the connection to the webserver is encrypted and you have basic authentication running. If you don't it will complain. You can overrule this behaviour in the asker.php file. Just edit the file and look at the top of the file for:
 
-`
-$OVERRULE_SSL=false;
-$OVERRULE_AUTH=false;
-`
+`$OVERRULE_SSL=false;`
+
+`$OVERRULE_AUTH=false;`
 
 Change them to true if you want to overrule either or both checks.
 
@@ -208,7 +207,7 @@ Show action will show the output of the command that was run, so basically the c
 
 When the argument pre is given the output will be shown pre-formatted.
 
-**Example
+**Example**
 
 Show the output of the action pre-formatted.
 
@@ -233,7 +232,7 @@ As lists can be quite long, the list of items is usually a variable (for example
 This text will be prepended to the select box. This text can contain variables that will be expanded.
 
 
-**Example
+**Example**
 
 Show a selection box with all usernames previously obtained with an action and assign it to the variable USER.
 
@@ -241,29 +240,47 @@ Show a selection box with all usernames previously obtained with an action and a
 
 #### checkbox
 
+A checkbox will create a checkbox with text the user can select (or not).
+
 **Arguments**
 
-*1*
+*Variable*
 
-**Example
+This is the name of the variable the selection of the user will be assigned to.
 
-ex
+*Chosen option*
 
-`item[]`
+If the user checks the checkbox, this value will be assigned to the variable. This value will not be shown to the user.
 
+*Text to display*
+
+The text that is shown next to the checkbox.
+
+**Example**
+
+Give the user the option to run a command in debug mode.
+
+`item[] = checkbox,%DEBUG%,-d,"Debug mode"`
 
 #### button
 
+A button is used to transition to a different screen.
+
 **Arguments**
 
-*1*
+*Name of screen*
 
-**Example
+This is the name of the screen that should be shown when the button is pressed.
 
-ex
+*Text to display*
 
-`item[]`
+The text that is shown on the button.
 
+**Example**
+
+Go to the runcommand screen when the user presses the button Run Command
+
+`item[] = button,runcommand,Run Command`
 
 # Screen design
 
