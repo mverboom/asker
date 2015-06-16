@@ -55,7 +55,7 @@ Except for the global part of the configuration, variables can be used when defi
 
 `%VAR%`
 
-is a variable. Variables can be choosen to be any letter/number combination, except for the variable `%OUTPUT%`. This variable is automatically defined when a screen is defined with a command to run. The variable `%OUTPUT%` contains the output of the command.
+is a variable. Variables can be choosen to be any letter/number combination.
 
 ## Global configuration
 
@@ -95,6 +95,36 @@ Use the file asker.css as the cascading style sheet.
 
 `css = asker.css`
 
+### log (optional)
+
+Specifying a log facility makes asker log lines for every request. This will give some basic tracing capability for actions that are performed through asker.
+
+**Logging type**
+
+This can be either file or syslog.
+
+When logging through a file, the second part of the arguments should be pointing to a filename. Keep in mind that the user the software is running as needs write capabilities for that file.
+
+When using syslog, the second part of the argument can be the syslog facility level. These are:
+- LOG_EMERG
+- LOG_ALERT
+- LOG_CRIT
+- LOG_ERR
+- LOG_WARNING
+- LOG_NOTICE
+- LOG_INFO
+- LOG_DEBUG
+
+**Examples**
+
+Use the file /var/log/asker.log to log user actions.
+
+ log = file,/var/log/asker.log
+
+Log all actions through syslog with level critical.
+
+ log = syslog,LOG_CRIT
+
 ## Screen configuration
 
 There can be loads of screens in a single configuration file (maybe it is better to split them out over more configuration files, but it is possible).
@@ -131,19 +161,23 @@ The command will always run in the background. When running an action the webbro
 
 Normal will just show a time counter indicating how long the command has been running. When completed it will display the screen. Follow will also show the time counter and show the output of the command while it is running. After the command has completed it will display the screen.
 
+*variable*
+
+The name of the variable the output of the command should be assigned to.
+
 *command*
 
 The command to run. It is possible to use variables when defining the command.
 
 **Examples**
 
-Generate a process list and display the amount of time that has elapsed
+Generate a process list, assing it to variable LIST and display the amount of time that has elapsed
 
-`action = normal,ps -ef`
+`action = normal,%LIST%,ps -ef`
 
-Create a directory listing and sleep 5 seconds with the output showing on screen
+Create a directory listing and sleep 5 seconds with the output showing on screen and assigning it to variable DIR.
 
-`action = follow,ls -al;sleep 5`
+`action = follow,%DIR%,ls -al;sleep 5`
 
 Run the command the user has entered in a previous screen and is in the variable CMD
 
@@ -165,7 +199,7 @@ Text is a very basic item. It will display the text following it on the screen.
 
 *Text to display*
 
-This is the text to display. Variable substitution is applied to the text.
+This is the text to display. Variable substitution is applied to the text. It is also possible to use HTML code in the text.
 
 **Example**
 
@@ -173,9 +207,9 @@ Show text This is a test
 
 `item[] = text,"This is a test"`
 
-Show text Hi with the name of the user in variable USER from previous screen.
+Show text Hi with the name of the user in italic from the variable USER read in the previous screen.
 
-`item[] = text,"Hi %USER%"`
+`item[] = text,"Hi <i>%USER%</i>"`
 
 #### input
 
@@ -195,29 +229,17 @@ This text will be prepended to the input box. This text can contain variables th
 
 Ask the user's name and assign it to variable USER.
 
-`item[] = input,USER,"Enter your name"`
-
-#### showaction
-
-Show action will show the output of the command that was run, so basically the contents of the variable OUTPUT.
-
-**Arguments**
-
-*pre* (optional)
-
-When the argument pre is given the output will be shown pre-formatted.
-
-**Example**
-
-Show the output of the action pre-formatted.
-
-`item[] = showaction,pre`
+`item[] = input,USER,"Enter your name:"`
 
 #### select
 
 The select input will show a list of items which the user can make a selection from.
 
 **Arguments**
+
+*Size*
+
+This is the number of items that will be shown at a time. When 1 is specified it will function as a drop down box.
 
 *Variable*
 
@@ -234,9 +256,9 @@ This text will be prepended to the select box. This text can contain variables t
 
 **Example**
 
-Show a selection box with all usernames previously obtained with an action and assign it to the variable USER.
+Show a selection box with all usernames previously obtained with an action (assigned to %LIST%) and assign it to the variable USER. Ten users will be displayed at once.
 
-`item[] = select,%USER%,%OUTPUT%,"Choose user"`
+`item[] = select,10,%USER%,%LIST%,"Choose user"`
 
 #### checkbox
 
@@ -281,6 +303,38 @@ The text that is shown on the button.
 Go to the runcommand screen when the user presses the button Run Command
 
 `item[] = button,runcommand,Run Command`
+
+#### keep
+
+keep is a special case. If a variable has been assigned a value in a previous screen, but it is not going to be used in the current screen but in a next one, you can preserve the value of the variable by using keep. If keep isn't used, the variable value will be lost in the next screen.
+
+**Arguments**
+
+*Variable name*
+
+This is the name of the variable which value has to be kept so it can be used in a next screen.
+
+**Example**
+
+Keep the value of variable ITEM.
+
+`item[] = keep,%ITEM%
+
+#### autosubmit
+
+This will not wait for the user to press a button, but automatically transition to the next screen. This can be useful if more then one action needs to be ran. Remember to use a keep statement if you want to preserve the output of actions across screens.
+
+**Arguments**
+
+*Name of screen*
+
+This is the name of the screen that should be shown when the button is pressed.
+
+**Example**
+
+Go to the screen nextaction automatically.
+
+`item[] = autosubmit,nextaction`
 
 # Screen design
 
