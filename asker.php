@@ -3,7 +3,7 @@
 //
 $CONFIGDIR="configs";
 $NAME="Asker";
-$VERSION="0.6";
+$VERSION="0.61";
 $OVERRULE_SSL=false;
 $OVERRULE_AUTH=false;
 
@@ -17,7 +17,7 @@ header("Pragma: no-cache");
 function substitute($text, $array) {
    foreach ($array as $var => $val) {
       if ((substr($var, -1) == "%") && (substr($var,0,1) == "%"))
-         $text = str_replace($var, $val, $text);
+         $text = str_replace($var, urldecode($val), $text);
    }
    return $text;
 }
@@ -55,7 +55,7 @@ function showstart($name, $title, $action, $css) {
    echo "<div id=heading>" . $GLOBALS['user'] . "@" . $GLOBALS["NAME"] . "(" . $_REQUEST["action"] . "): " . $name . " - " . $title . "</div>";
    echo "<h1>" . $name . "</h1>";
    echo "<h2>" . $title . "</h2>";
-   echo "<form accept-charset=UTF-8>";
+   echo "<form accept-charset=UTF-8 name=asker>";
    echo "<input type=hidden name=action value=" . $action . ">";
 }
 
@@ -81,9 +81,9 @@ function inputcheckbox($variable, $value, $question) {
 }
 
 
-function inputselect($size, $variable, $list, $question) {
+function select($size, $variable, $list, $question) {
    echo $question . " <select name=" . $variable . " size=" . $size . ">";
-   foreach (explode("\n", $_REQUEST[$list]) as $item) {
+   foreach (explode("\n", urldecode($_REQUEST[$list])) as $item) {
       if ($item != "") {
          if (strpos($item,'	') !== false) {
             $split = explode("	", $item);
@@ -101,7 +101,13 @@ function keep($variable) {
    $output="<input type=hidden name=" . $variable . " value=";
    
    $value = substitute($variable, $_REQUEST);
-   echo $output . $value . ">";
+   echo $output . urlencode($value) . ">";
+}
+
+function autosubmit($screen) {
+
+   echo "<input type=hidden name=state value=" . $screen . ">";
+   echo "<script>window.onload = function(){document.forms[\"asker\"].submit();}</script>";
 }
 
 function button($screen, $label) {
@@ -298,7 +304,7 @@ function main() {
                   $size = shift($name, ",");
                   $variable = shift($name, ",");
                   $list = shift($name, ",");
-                  inputselect($size, $variable, $list, $name);
+                  select($size, $variable, $list, $name);
                break;
                case "button":
                   $screen = shift($name, ",");
@@ -309,13 +315,11 @@ function main() {
                   $value = shift($name, ",");
                   inputcheckbox($variable, $value, $name);
                break;
-
                case "keep":
                   keep($name);
                break;
-               case "showvar":
-                  $format = shift($name, ",");
-                  showvar($format, $name);
+               case "autosubmit":
+                  autosubmit($name);
                break;
             }
          }
