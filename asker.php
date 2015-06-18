@@ -111,7 +111,7 @@ function button($screen, $label) {
    echo "<button type=submit name=state value=" . $screen . ">" . $label . "</button>";
 }
 
-function startaction($type, $var, $action) {
+function startrun($type, $var, $action) {
    $cmd=clearvars(substitute($action, $_REQUEST));
    logline("Running action: " . $cmd);
    exec("(" . $cmd . ") > /tmp/asker.start 2>&1 & echo $!", $output, $retval);
@@ -146,7 +146,7 @@ function startaction($type, $var, $action) {
                if (val == \"running\")
                   setTimeout(checkpid,timeout);
                else
-                  window.location.href=\"asker.php?resumeaction=" . $pid . "&var=" . $var . "\";
+                  window.location.href=\"asker.php?resumerun=" . $pid . "&var=" . $var . "\";
             }
          }
          url=\"asker.php?pidcheck=" . $pid . "\";
@@ -166,7 +166,7 @@ function startaction($type, $var, $action) {
    showend();
 }
 
-function resumeaction($pid) {
+function resumerun($pid) {
    $file = "/tmp/asker." . $pid . ".var";
    $rest = file_get_contents($file);
    $_REQUEST = unserialize($rest);
@@ -250,6 +250,85 @@ function logopen($config) {
       $GLOBALS['log'] = FALSE;
 }
 
+function processaction($action, $resumerun) {
+   $config = readconfig($action);
+   logopen($config);
+   logline("Starting config: " . $action);
+
+   if (!isset($_REQUEST['state']))
+      $state = $config['start']['begin'];
+   else
+      $state = $_REQUEST['state'];
+
+   logline("Requesting state: " . $state);
+
+   if (!isset($config[$state]))
+      showerror("Screen " . $state . " does not exist.");
+
+   if (!isset($config[$state]['title']))
+      showerror("Screen " . $state . " does not have a title.");
+
+   if (isset($config['start']['css']))
+      $css=$config['start']['css'];
+   else
+      $css="";
+
+   showstart($config['start']['name'], $config[$state]['title'], $action, $css);
+
+   if (isset($config[$state]['run']) & $resumerun == 0) {
+      $runline = substr($config[$state]['run'],1);
+      $optionsraw = shift($runline, "}");
+      $command = substr($runline,1);
+      foreach (explode(",", $optionsraw) as $item) {
+         $s = explode(":", $item);
+         $cfg[$s[0]] = $s[1];
+      }
+      startrun(isset($cfg['type'])?$cfg['type']:"normal",$cfg['var'], $command);
+   }
+
+   if (isset($config[$state]['item'])) {
+      foreach ($config[$state]['item'] as $id => $name) {
+         $cmd = shift($name, "{");
+         $optionsraw = shift($name, "}");
+         $text = substr($name,1);
+
+         unset($cfg);
+         if ($optionsraw != "") {
+            foreach (explode(",", $optionsraw) as $item) {
+               $s = explode(":", $item);
+               $cfg[$s[0]] = $s[1];
+            }
+         }
+
+         switch ($cmd) {
+            case "text":
+               showtext($text);
+            break;
+            case "input":
+               inputtext($cfg['var'], $text);
+            break;
+            case "select":
+               select(isset($cfg['size'])?$cfg['size']:1, $cfg['var'], $cfg['list'], $text);
+            break;
+            case "button":
+               button($cfg['scr'], $text);
+            break;
+            case "checkbox":
+               inputcheckbox($cfg['var'], $cfg['val'], $text);
+            break;
+            case "keep":
+               keep($cfg['var']);
+            break;
+            case "autosubmit":
+               autosubmit($cfg['scr']);
+            break;
+         }
+      }
+   }
+   logline("Finished.");
+   showend();
+}
+
 function main() {
    global $log;
    global $logdata;
@@ -257,91 +336,16 @@ function main() {
 
    sanitychecks();
 
-   if (isset($_REQUEST['resumeaction'])) {
-      $pid = $_REQUEST['resumeaction'];
+   $resumerun = 0;
+   if (isset($_REQUEST['resumerun'])) {
+      $pid = $_REQUEST['resumerun'];
       $var = $_REQUEST['var'];
-      $_REQUEST["$var"] = resumeaction($pid);
-      $resumeaction = 1;
+      $_REQUEST["$var"] = resumerun($pid);
+      $resumerun = 1;
    }
 
    if (isset($_REQUEST['action'])) {
-      $action = $_REQUEST['action'];
-      $config = readconfig($action);
-      logopen($config);
-      logline("Starting config: " . $action);
-
-      if (!isset($_REQUEST['state']))
-         $state = $config['start']['begin'];
-      else
-         $state = $_REQUEST['state'];
-
-      logline("Requesting state: " . $state);
-
-      if (!isset($config[$state]))
-         showerror("Screen " . $state . " does not exist.");
-
-      if (!isset($config[$state]['title']))
-         showerror("Screen " . $state . " does not have a title.");
-
-      if (isset($config['start']['css']))
-         $css=$config['start']['css'];
-      else
-         $css="";
-
-      showstart($config['start']['name'], $config[$state]['title'], $action, $css);
-
-      if (isset($config[$state]['action']) & ! isset($resumeaction)) {
-         $actionline = substr($config[$state]['action'],1);
-         $optionsraw = shift($actionline, "}");
-         $command = substr($actionline,1);
-         foreach (explode(",", $optionsraw) as $item) {
-            $s = explode(":", $item);
-            $cfg[$s[0]] = $s[1];
-         }
-         startaction(isset($cfg['type'])?$cfg['type']:"normal",$cfg['var'], $command);
-      }
-
-      if (isset($config[$state]['item'])) {
-         foreach ($config[$state]['item'] as $id => $name) {
-            $cmd = shift($name, "{");
-            $optionsraw = shift($name, "}");
-            $text = substr($name,1);
-
-            unset($cfg);
-            if ($optionsraw != "") {
-               foreach (explode(",", $optionsraw) as $item) {
-                  $s = explode(":", $item);
-                  $cfg[$s[0]] = $s[1];
-               }
-            }
-
-            switch ($cmd) {
-               case "text":
-                  showtext($text);
-               break;
-               case "input":
-                  inputtext($cfg['var'], $text);
-               break;
-               case "select":
-                  select(isset($cfg['size'])?$cfg['size']:1, $cfg['var'], $cfg['list'], $text);
-               break;
-               case "button":
-                  button($cfg['scr'], $text);
-               break;
-               case "checkbox":
-                  inputcheckbox($cfg['var'], $cfg['val'], $text);
-               break;
-               case "keep":
-                  keep($cfg['var']);
-               break;
-               case "autosubmit":
-                  autosubmit($cfg['scr']);
-               break;
-            }
-         }
-      }
-      logline("Finished.");
-      showend();
+      processaction($_REQUEST['action'], $resumerun);
    }
    elseif (isset($_REQUEST['pidcheck'])) {
       $pid = $_REQUEST['pidcheck'];
