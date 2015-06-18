@@ -3,7 +3,7 @@
 //
 $CONFIGDIR="configs";
 $NAME="Asker";
-$VERSION="0.61";
+$VERSION="0.63";
 $OVERRULE_SSL=false;
 $OVERRULE_AUTH=false;
 
@@ -27,7 +27,6 @@ function clearvars($text) {
 }
 
 function showtext($data) {
-   global $action;
    $output = substitute($data, $_REQUEST);
    echo clearvars($output) . "<br>";
 }
@@ -52,7 +51,7 @@ function showstart($name, $title, $action, $css) {
       echo "<link rel=stylesheet type=text/css href=" . $css . ">";
 
    echo "</head>";
-   echo "<div id=heading>" . $GLOBALS['user'] . "@" . $GLOBALS["NAME"] . "(" . $_REQUEST["action"] . "): " . $name . " - " . $title . "</div>";
+   echo "<div id=heading>" . $GLOBALS['user'] . "@" . $GLOBALS["NAME"] . "(" . $action . "): " . $name . " - " . $title . "</div>";
    echo "<h1>" . $name . "</h1>";
    echo "<h2>" . $title . "</h2>";
    echo "<form accept-charset=UTF-8 name=asker>";
@@ -96,8 +95,6 @@ function select($size, $variable, $list, $question) {
 }
 
 function keep($variable) {
-   global $action;
-
    $output="<input type=hidden name=" . $variable . " value=";
    
    $value = substitute($variable, $_REQUEST);
@@ -196,25 +193,7 @@ function shift(&$string, $seperator) {
    return($val);
 }
 
-function walk($val, $key, &$new_array){
-$nums = explode(':',$val);
-$new_array[$nums[0]] = $nums[1];
-}
-
-            function splitopt($n) {
-               $s = explode(":", $n);
-               //return array($s[0] => $s[1]);
-               return "hoi";
-            
-            }
-
-function main() {
-
-   global $action;
-   global $log;
-   global $logdata;
-   global $user;
-
+function sanitychecks() {
    if ( !$GLOBALS['OVERRULE_SSL'] && !(isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') and
       !(!empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] == 'https' || !empty($_SERVER['HTTP_X_FORWARDED_SSL']) && $_SERVER['HTTP_X_FORWARDED_SSL'] == 'on') 
       )
@@ -224,21 +203,15 @@ function main() {
       showerror("There seems to be no authentication on the communcation.");
 
    if (isset($_SERVER['PHP_AUTH_USER']))
-      $user = $_SERVER['PHP_AUTH_USER'];
+      $GLOBALS['user'] = $_SERVER['PHP_AUTH_USER'];
    else
-      $user = "anonymous";
+      $GLOBALS['user'] = "anonymous";
+}
 
-   if (isset($_REQUEST['resumeaction'])) {
-      $pid = $_REQUEST['resumeaction'];
-      $var = $_REQUEST['var'];
-      $_REQUEST["$var"] = resumeaction($pid);
-      $resumeaction = 1;
-   }
-
-   if (isset($_REQUEST['action'])) {
+function readconfig($action) {
       if (is_writable($GLOBALS["CONFIGDIR"]))
          showerror("Configuration directory " . $GLOBALS["CONFIGDIR"] . " is writable by the web user. This is really insecure.");
-      $configfile = $GLOBALS["CONFIGDIR"] . "/" . $_REQUEST['action']. ".ini";
+      $configfile = $GLOBALS["CONFIGDIR"] . "/" . $action. ".ini";
       if (preg_match('/^[a-z0-9-\/]+\.ini$/', $configfile)) {
          if (file_exists($configfile)) {
             if (is_writable($configfile))
@@ -253,26 +226,49 @@ function main() {
             showerror("Configuration file " . $configfile . " does not exist.");
       } else
          showerror("Configuration file " . $configfile . " contains invalid characters.");
+   return $config;
+}
 
-      if (isset($config['start']['log'])) {
-         $logconfig = $config['start']['log'];
-         $logtype = shift($logconfig, ",");
-         switch($logtype) {
-            case "file":
-               $logdata = fopen($logconfig, "a");
-               if ($logdata == FALSE)
-                  showerror("Unable to open logfile: " . $logconfig);
-               $log = $logtype;
-            break;
-            case "syslog":
-               $logdata = $logconfig;
-               $log = $logtype;
-           break;
-         }
+function logopen($config) {
+   if (isset($config['start']['log'])) {
+      $logconfig = $config['start']['log'];
+      $logtype = shift($logconfig, ",");
+      switch($logtype) {
+         case "file":
+            $GLOBALS['logdata'] = fopen($logconfig, "a");
+            if ($GLOBALS['logdata'] == FALSE)
+               showerror("Unable to open logfile: " . $logconfig);
+            $GLOBALS['log'] = $logtype;
+         break;
+         case "syslog":
+            $GLOBALS['logdata'] = $logconfig;
+            $GLOBALS['log'] = $logtype;
+        break;
       }
-      else
-         $log = FALSE;
-      logline("Starting config: " . $configfile);
+   }
+   else
+      $GLOBALS['log'] = FALSE;
+}
+
+function main() {
+   global $log;
+   global $logdata;
+   global $user;
+
+   sanitychecks();
+
+   if (isset($_REQUEST['resumeaction'])) {
+      $pid = $_REQUEST['resumeaction'];
+      $var = $_REQUEST['var'];
+      $_REQUEST["$var"] = resumeaction($pid);
+      $resumeaction = 1;
+   }
+
+   if (isset($_REQUEST['action'])) {
+      $action = $_REQUEST['action'];
+      $config = readconfig($action);
+      logopen($config);
+      logline("Starting config: " . $action);
 
       if (!isset($_REQUEST['state']))
          $state = $config['start']['begin'];
@@ -292,17 +288,17 @@ function main() {
       else
          $css="";
 
-      showstart($config['start']['name'], $config[$state]['title'], $_REQUEST['action'], $css);
+      showstart($config['start']['name'], $config[$state]['title'], $action, $css);
 
       if (isset($config[$state]['action']) & ! isset($resumeaction)) {
-         $action = substr($config[$state]['action'],1);
-         $optionsraw = shift($action, "}");
-         $action = substr($action,1);
+         $actionline = substr($config[$state]['action'],1);
+         $optionsraw = shift($actionline, "}");
+         $command = substr($actionline,1);
          foreach (explode(",", $optionsraw) as $item) {
             $s = explode(":", $item);
             $cfg[$s[0]] = $s[1];
          }
-         startaction(isset($cfg['type'])?$cfg['type']:"normal",$cfg['var'], $action);
+         startaction(isset($cfg['type'])?$cfg['type']:"normal",$cfg['var'], $command);
       }
 
       if (isset($config[$state]['item'])) {
