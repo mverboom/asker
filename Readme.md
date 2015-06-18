@@ -325,7 +325,7 @@ This is the name of the variable which value has to be kept so it can be used in
 
 Keep the value of variable ITEM.
 
-`item[] = keep{var:%ITEM%}
+`item[] = keep{var:%ITEM%}`
 
 #### autosubmit
 
