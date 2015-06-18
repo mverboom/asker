@@ -1,6 +1,6 @@
 # Asker
 
-Asker is an insecure (I can't stress this enough) PHP script to create web based dialogs with a user to execute actions. The main drive behind the script was to create a web based interface for a helpdesk to allow them to execute tasks that normally would have to be done by system administrators.
+Asker is an insecure (I can't stress this enough) PHP script to create web based dialogs with a user to execute commands. The main drive behind the script was to create a web based interface for a helpdesk to allow them to execute tasks that normally would have to be done by system administrators.
 
 This is **BETA** grade software at best!
 
@@ -149,23 +149,27 @@ Set the title of the scren to This is the first screen
 
 `title = "This is the first screen"`
 
-### action (optional)
+### run (optional)
 
-An action defines a command that needs to be executed. There can only be one action per screen. When a screen has an action defined, the action will be run before any of the information in the screen is displayed.
+Run defines a command that needs to be executed. There can only be one run per screen. When a screen has an run defined, the run will be executed before any of the information in the screen is displayed.
 
-The command will always run in the background. When running an action the webbrowser will be served with a bit of javascript which periodically will poll the server to see if the task has already completed. This works around webserver timeout problems with long running tasks.
+The command will always be executed in the background. When the command is running the webbrowser will be served with a bit of javascript which periodically will poll the server to see if the command has already completed. This works around webserver timeout problems with long running commands.
 
-**Arguments**
+**Options**
 
-*(normal|follow)*
+*type* (optional)
 
-Normal will just show a time counter indicating how long the command has been running. When completed it will display the screen. Follow will also show the time counter and show the output of the command while it is running. After the command has completed it will display the screen.
+Defaults to normal.
 
-*variable*
+Normal will just show a time counter indicating how long the command has been running. When completed it will display the screen.
+
+Follow will also show the time counter and show the output of the command while it is running. After the command has completed it will display the screen.
+
+*var* (mandatory)
 
 The name of the variable the output of the command should be assigned to.
 
-*command*
+**command**
 
 The command to run. It is possible to use variables when defining the command.
 
@@ -173,15 +177,15 @@ The command to run. It is possible to use variables when defining the command.
 
 Generate a process list, assing it to variable LIST and display the amount of time that has elapsed
 
-`action = normal,%LIST%,ps -ef`
+`action = {var:%LIST%},ps -ef`
 
 Create a directory listing and sleep 5 seconds with the output showing on screen and assigning it to variable DIR.
 
-`action = follow,%DIR%,ls -al;sleep 5`
+`action = {type:follow,var:%DIR%},ls -al;sleep 5`
 
-Run the command the user has entered in a previous screen and is in the variable CMD
+Run the command the user has entered in a previous screen and is in the variable CMD. The output of the command is assigned to the variable OUTPUT.
 
-`action = normal,%CMD%
+`action = {var:%OUTPUT%},%CMD%
 
 ### item[] (optional)
 
@@ -195,9 +199,11 @@ Below follows a list of different types of items.
 
 Text is a very basic item. It will display the text following it on the screen.
 
-**Arguments**
+**Options**
 
-*Text to display*
+None
+
+**Text to display**
 
 This is the text to display. Variable substitution is applied to the text. It is also possible to use HTML code in the text.
 
@@ -205,23 +211,23 @@ This is the text to display. Variable substitution is applied to the text. It is
 
 Show text This is a test
 
-`item[] = text,"This is a test"`
+`item[] = text{},"This is a test"`
 
 Show text Hi with the name of the user in italic from the variable USER read in the previous screen.
 
-`item[] = text,"Hi <i>%USER%</i>"`
+`item[] = text{},"Hi <i>%USER%</i>"`
 
 #### input
 
 Input will show a free form input field in which the user can fill out text. The text will be assigned to a variable which can be used in another screen.
 
-**Arguments**
+**Options**
 
-*Variable name*
+*var* (mandatory)
 
 This is the name of the variable the input of the user will be assigned to.
 
-*Text to display*
+**Text to display**
 
 This text will be prepended to the input box. This text can contain variables that will be expanded.
 
@@ -229,52 +235,53 @@ This text will be prepended to the input box. This text can contain variables th
 
 Ask the user's name and assign it to variable USER.
 
-`item[] = input,USER,"Enter your name:"`
+`item[] = input{var:%USER%},"Enter your name:"`
 
 #### select
 
 The select input will show a list of items which the user can make a selection from.
 
-**Arguments**
+**Options**
 
-*Size*
+*size* (optional)
+
+Defaults to 1.
 
 This is the number of items that will be shown at a time. When 1 is specified it will function as a drop down box.
 
-*Variable*
+*var* (mandatory)
 
 This is the name of the variable the selection of the user will be assigned to.
 
-*List of items*
+*list* (mandatory)
 
-As lists can be quite long, the list of items is usually a variable (for example the output of a command). Each item for the list is seperated by a newline. If an item contains a tab character, the part before the tab is used to assign to the variable if the item is choosen. The part after the tab is being shown to the user. This can for example be useful when showing a list of users on a system. Before the tab the login account of the user is used and after the tab the full user name.
+As lists can be quite long, the list of items a variable (for example the output of a run). Each item for the list is seperated by a newline. If an item contains a tab character, the part before the tab is used to assign to the variable if the item is choosen. The part after the tab is being shown to the user. This can for example be useful when showing a list of users on a system. Before the tab the login account of the user is used and after the tab the full user name.
 
-*Text to display*
+**Text to display**
 
 This text will be prepended to the select box. This text can contain variables that will be expanded.
-
 
 **Example**
 
 Show a selection box with all usernames previously obtained with an action (assigned to %LIST%) and assign it to the variable USER. Ten users will be displayed at once.
 
-`item[] = select,10,%USER%,%LIST%,"Choose user"`
+`item[] = select{size:10,var:%USER%,list:%LIST%},"Choose user"`
 
 #### checkbox
 
 A checkbox will create a checkbox with text the user can select (or not).
 
-**Arguments**
+**Options**
 
-*Variable*
+*var* (mandatory)
 
 This is the name of the variable the selection of the user will be assigned to.
 
-*Chosen option*
+*val* (mandatory)
 
 If the user checks the checkbox, this value will be assigned to the variable. This value will not be shown to the user.
 
-*Text to display*
+**Text to display**
 
 The text that is shown next to the checkbox.
 
@@ -282,19 +289,19 @@ The text that is shown next to the checkbox.
 
 Give the user the option to run a command in debug mode.
 
-`item[] = checkbox,%DEBUG%,-d,"Debug mode"`
+`item[] = checkbox{var:%DEBUG%,val:-d},"Debug mode"`
 
 #### button
 
 A button is used to transition to a different screen.
 
-**Arguments**
+**Options**
 
-*Name of screen*
+*scr* (mandatory)
 
 This is the name of the screen that should be shown when the button is pressed.
 
-*Text to display*
+**Text to display**
 
 The text that is shown on the button.
 
@@ -302,15 +309,15 @@ The text that is shown on the button.
 
 Go to the runcommand screen when the user presses the button Run Command
 
-`item[] = button,runcommand,Run Command`
+`item[] = button{scr:runcommand},Run Command`
 
 #### keep
 
 keep is a special case. If a variable has been assigned a value in a previous screen, but it is not going to be used in the current screen but in a next one, you can preserve the value of the variable by using keep. If keep isn't used, the variable value will be lost in the next screen.
 
-**Arguments**
+**Options**
 
-*Variable name*
+*var* (mandatory)
 
 This is the name of the variable which value has to be kept so it can be used in a next screen.
 
@@ -318,15 +325,15 @@ This is the name of the variable which value has to be kept so it can be used in
 
 Keep the value of variable ITEM.
 
-`item[] = keep,%ITEM%
+`item[] = keep{var:%ITEM%}
 
 #### autosubmit
 
 This will not wait for the user to press a button, but automatically transition to the next screen. This can be useful if more then one action needs to be ran. Remember to use a keep statement if you want to preserve the output of actions across screens.
 
-**Arguments**
+**Options**
 
-*Name of screen*
+*scr* (mandatory)
 
 This is the name of the screen that should be shown when the button is pressed.
 
@@ -334,7 +341,7 @@ This is the name of the screen that should be shown when the button is pressed.
 
 Go to the screen nextaction automatically.
 
-`item[] = autosubmit,nextaction`
+`item[] = autosubmit{scr:nextaction}`
 
 # Screen design
 
@@ -348,13 +355,13 @@ This id is used by the information heading at the start of the page. In the exam
 
 ## #progress
 
-This is can be used to put aditional content on the screen when an action is running. You can for example show an animation or do other stuff.
+This is can be used to put aditional content on the screen when an command is running. You can for example show an animation or do other stuff.
 
 ## #time
 
-This id is used when an action is running to indicate the div that is updated with the number of seconds the action has been running.
+This id is used when an command is running to indicate the div that is updated with the number of seconds the command has been running.
 
 
 ## #follow
 
-This id is used to reference the part of the screen where the output of a running action is displayed. It can be useful to make this an auto scrolling part of the screen. The javascript code that updates this id with new output as it becomes available also scrolls the output down if it is set to scroll in the css.
+This id is used to reference the part of the screen where the output of a running command is displayed. It can be useful to make this an auto scrolling part of the screen. The javascript code that updates this id with new output as it becomes available also scrolls the output down if it is set to scroll in the css.
