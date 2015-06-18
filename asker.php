@@ -196,6 +196,18 @@ function shift(&$string, $seperator) {
    return($val);
 }
 
+function walk($val, $key, &$new_array){
+$nums = explode(':',$val);
+$new_array[$nums[0]] = $nums[1];
+}
+
+            function splitopt($n) {
+               $s = explode(":", $n);
+               //return array($s[0] => $s[1]);
+               return "hoi";
+            
+            }
+
 function main() {
 
    global $action;
@@ -283,43 +295,51 @@ function main() {
       showstart($config['start']['name'], $config[$state]['title'], $_REQUEST['action'], $css);
 
       if (isset($config[$state]['action']) & ! isset($resumeaction)) {
-         $action = $config[$state]['action'];
-         $type = shift($action, ",");
-         $var = shift($action, ",");
-         startaction($type, $var, $action);
+         $action = substr($config[$state]['action'],1);
+         $optionsraw = shift($action, "}");
+         $action = substr($action,1);
+         foreach (explode(",", $optionsraw) as $item) {
+            $s = explode(":", $item);
+            $cfg[$s[0]] = $s[1];
+         }
+         startaction(isset($cfg['type'])?$cfg['type']:"normal",$cfg['var'], $action);
       }
 
       if (isset($config[$state]['item'])) {
          foreach ($config[$state]['item'] as $id => $name) {
-            $cmd = shift($name, ",");
+            $cmd = shift($name, "{");
+            $optionsraw = shift($name, "}");
+            $text = substr($name,1);
+
+            unset($cfg);
+            if ($optionsraw != "") {
+               foreach (explode(",", $optionsraw) as $item) {
+                  $s = explode(":", $item);
+                  $cfg[$s[0]] = $s[1];
+               }
+            }
+
             switch ($cmd) {
                case "text":
-                  showtext($name);
+                  showtext($text);
                break;
                case "input":
-                  $variable = shift($name, ",");
-                  inputtext($variable, $name);
+                  inputtext($cfg['var'], $text);
                break;
                case "select":
-                  $size = shift($name, ",");
-                  $variable = shift($name, ",");
-                  $list = shift($name, ",");
-                  select($size, $variable, $list, $name);
+                  select(isset($cfg['size'])?$cfg['size']:1, $cfg['var'], $cfg['list'], $text);
                break;
                case "button":
-                  $screen = shift($name, ",");
-                  button($screen, $name);
+                  button($cfg['scr'], $text);
                break;
                case "checkbox":
-                  $variable = shift($name, ",");
-                  $value = shift($name, ",");
-                  inputcheckbox($variable, $value, $name);
+                  inputcheckbox($cfg['var'], $cfg['val'], $text);
                break;
                case "keep":
-                  keep($name);
+                  keep($cfg['var']);
                break;
                case "autosubmit":
-                  autosubmit($name);
+                  autosubmit($cfg['scr']);
                break;
             }
          }
