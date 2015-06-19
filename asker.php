@@ -3,7 +3,7 @@
 //
 $CONFIGDIR="configs";
 $NAME="Asker";
-$VERSION="0.63";
+$VERSION="0.65";
 $OVERRULE_SSL=false;
 $OVERRULE_AUTH=false;
 
@@ -311,6 +311,8 @@ function processaction($action, $resumerun) {
                select(isset($cfg['size'])?$cfg['size']:1, $cfg['var'], $cfg['list'], $text);
             break;
             case "button":
+               if (!isset($config[$cfg['scr']]))
+                  showerror("Screen " . $cfg['scr'] . " does not exist in button " . $text . ".");
                button($cfg['scr'], $text);
             break;
             case "checkbox":
@@ -320,6 +322,8 @@ function processaction($action, $resumerun) {
                keep($cfg['var']);
             break;
             case "autosubmit":
+               if (!isset($config[$cfg['scr']]))
+                  showerror("Screen " . $cfg['scr'] . " does not exist for autosubmit.");
                autosubmit($cfg['scr']);
             break;
          }
