@@ -75,9 +75,34 @@ function showend() {
    exit;
 }
 
-function inputtext($variable, $question) {
-   phtml($question . " <input type=text name=" . $variable . "><br>");
+function inputtext($variable, $question, $size, $required) {
+   if ($required == "true")
+      $req="required";
+   else
+      $req="";
+   phtml($question . " <input type=text name=" . $variable . " size=" . $size ." maxlength=" . $size . " " . $req . "><br>");
 }
+
+function inputpassword($variable, $question, $size, $required) {
+   if ($required == "true")
+      $req="required";
+   else
+      $req="";
+   phtml($question . " <input type=password name=" . $variable . " size=" . $size ." maxlength=" . $size . " " . $req . "><br>");
+}
+
+function inputnumber($variable, $question, $required, $min, $max) {
+   if ($required == "true")
+      $req="required";
+   else
+      $req="";
+   if ($min != "")
+      $min="min=".$min;
+   if ($max != "")
+      $max="max=".$max;
+   phtml($question . " <input type=number name=" . $variable . " " . $req . " " . $min . " " . $max . "><br>");
+}
+
 
 function inputcheckbox($variable, $value, $question) {
    phtml("<input type=checkbox name=" . $variable . " value=" . $value . ">" . $question ."</input><br>");
@@ -316,7 +341,13 @@ function processaction($action, $resumerun) {
                showtext($text);
             break;
             case "input":
-               inputtext($cfg['var'], $text);
+               inputtext($cfg['var'], $text,isset($cfg['size'])?$cfg['size']:30,isset($cfg['req'])?$cfg['req']:"");
+            break;
+            case "password":
+               inputpassword($cfg['var'], $text,isset($cfg['size'])?$cfg['size']:10,isset($cfg['req'])?$cfg['req']:"");
+            break;
+            case "number":
+               inputnumber($cfg['var'], $text,isset($cfg['req'])?$cfg['req']:"",isset($cfg['min'])?$cfg['min']:"",isset($cfg['max'])?$cfg['max']:"");
             break;
             case "select":
                select(isset($cfg['size'])?$cfg['size']:1, $cfg['var'], $cfg['list'], $text);
@@ -347,14 +378,7 @@ function processaction($action, $resumerun) {
    showend();
 }
 
-function main() {
-   global $log;
-   global $logdata;
-   global $user;
-
-   sanitychecks();
-
-   if (isset($_FILES)) {
+function uploadfiles() {
    foreach ($_FILES as $id => $file) {
         if ($file['error'] != 0)
            showerror("Uploading file " . $file['name'] . " failed.");
@@ -365,7 +389,17 @@ function main() {
         move_uploaded_file($file["tmp_name"], $targetfile);
         $_REQUEST[$parts[0]] = $targetfile;
       }
-   }
+}
+
+function main() {
+   global $log;
+   global $logdata;
+   global $user;
+
+   sanitychecks();
+
+   if (isset($_FILES))
+      uploadfiles();
 
    $resumerun = 0;
    if (isset($_REQUEST['resumerun'])) {
@@ -396,7 +430,7 @@ function main() {
          echo "not running";
    }
    else
-      echo "Nothing to do";
+      phtml("Choose action for asker to do.");
 }
 
 main();

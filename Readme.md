@@ -227,6 +227,12 @@ Input will show a free form input field in which the user can fill out text. The
 
 This is the name of the variable the input of the user will be assigned to.
 
+*size* (optional)
+
+Defaults to 30.
+
+The size in number of characters for the input field.
+
 **Text to display**
 
 This text will be prepended to the input box. This text can contain variables that will be expanded.
@@ -236,6 +242,68 @@ This text will be prepended to the input box. This text can contain variables th
 Ask the user's name and assign it to variable USER.
 
 `item[] = input{var:%USER%},"Enter your name:"`
+
+
+#### password
+
+Password will show a input field for a password. The password will be assigned to a variable which can be used in another screen.
+
+**Options**
+
+*var* (mandatory)
+
+This is the name of the variable the input of the user will be assigned to.
+
+*size* (optional)
+
+Defaults to 10.
+
+The size in number of characters for the input field.
+**Text to display**
+
+This text will be prepended to the input box. This text can contain variables that will be expanded.
+
+**Example**
+
+Ask the user's password (max 12 character) and assign it to variable PASSWORD.
+
+`item[] = password{var:%PASSWORD%,size:12},"Enter your password:"`
+
+
+#### number
+
+Number will show a free form input field in which the user can fill out a number. The number will be assigned to a variable which can be used in another screen.
+
+**Options**
+
+*var* (mandatory)
+
+This is the name of the variable the input of the user will be assigned to.
+
+*min* (optional)
+
+The lowest number that can be inputted.
+
+*max* (optional)
+
+The highest number that can be inputted.
+
+*req* (optional)
+
+Defaults to false.
+
+When set to true the field must be filled out, otherwise the user can't go to a next screen.
+
+**Text to display**
+
+This text will be prepended to the input box. This text can contain variables that will be expanded.
+
+**Example**
+
+Ask the user's age (between 12 and 100) and assign it to variable AGE.
+
+`item[] = number{var:%AGE%,min:12,max:100},"Enter your age:"`
+
 
 #### select
 
