@@ -22,13 +22,17 @@ function substitute($text, $array) {
    return $text;
 }
 
+function phtml($text) {
+   printf("%s\n", $text);
+}
+
 function clearvars($text) {
    return preg_replace("/%.*%/", "", $text);  
 }
 
 function showtext($data) {
    $output = substitute($data, $_REQUEST);
-   echo clearvars($output) . "<br>";
+   phtml(clearvars($output) . "<br>");
 }
 
 function logline($loginfo) {
@@ -46,21 +50,21 @@ function logline($loginfo) {
 }
 
 function showstart($name, $title, $action, $css) {
-   echo "<html><head><title>" . $GLOBALS["NAME"] . ": " . $name . " - " . $title . "</title>";
+   phtml("<html><head><title>" . $GLOBALS["NAME"] . ": " . $name . " - " . $title . "</title>");
    if ($css != "")
-      echo "<link rel=stylesheet type=text/css href=" . $css . ">";
+      phtml("<link rel=stylesheet type=text/css href=" . $css . ">");
 
-   echo "</head>";
-   echo "<div id=heading>" . $GLOBALS['user'] . "@" . $GLOBALS["NAME"] . "(" . $action . "): " . $name . " - " . $title . "</div>";
-   echo "<h1>" . $name . "</h1>";
-   echo "<h2>" . $title . "</h2>";
-   echo "<form accept-charset=UTF-8 name=asker>";
-   echo "<input type=hidden name=action value=" . $action . ">";
+   phtml("</head>");
+   phtml("<div id=heading>" . $GLOBALS['user'] . "@" . $GLOBALS["NAME"] . "(" . $action . "): " . $name . " - " . $title . "</div>");
+   phtml("<h1>" . $name . "</h1>");
+   phtml("<h2>" . $title . "</h2>");
+   phtml("<form accept-charset=UTF-8 name=asker enctype=multipart/form-data method=post>");
+   phtml("<input type=hidden name=action value=" . $action . ">");
 }
 
 function showend() {
-   echo "</form>";
-   echo "</html>";
+   phtml("</form>");
+   phtml("</html>");
    if ($GLOBALS['log'] != FALSE) {
       switch($GLOBALS['log']) {
          case "file":
@@ -72,43 +76,47 @@ function showend() {
 }
 
 function inputtext($variable, $question) {
-   echo $question . " <input type=text name=" . $variable . "><br>";
+   phtml($question . " <input type=text name=" . $variable . "><br>");
 }
 
 function inputcheckbox($variable, $value, $question) {
-   echo "<input type=checkbox name=" . $variable . " value=" . $value . ">" . $question ."</input><br>";
+   phtml("<input type=checkbox name=" . $variable . " value=" . $value . ">" . $question ."</input><br>");
 }
 
 
 function select($size, $variable, $list, $question) {
-   echo $question . " <select name=" . $variable . " size=" . $size . ">";
+   phtml($question . " <select name=" . $variable . " size=" . $size . ">");
    foreach (explode("\n", urldecode($_REQUEST[$list])) as $item) {
       if ($item != "") {
          if (strpos($item,'	') !== false) {
             $split = explode("	", $item);
-            echo "<option value=\"" . $split[0] . "\">" . $split[1];
+            phtml("<option value=\"" . $split[0] . "\">" . $split[1]);
          } else
-            echo "<option value=\"" . $item . "\">" . $item . "</option>";
+            phtml("<option value=\"" . $item . "\">" . $item . "</option>");
       }
    }
-   echo "</select><br>";
+   phtml("</select><br>");
 }
 
 function keep($variable) {
    $output="<input type=hidden name=" . $variable . " value=";
    
    $value = substitute($variable, $_REQUEST);
-   echo $output . urlencode($value) . ">";
+   phtml($output . urlencode($value) . ">");
 }
 
 function autosubmit($screen) {
 
-   echo "<input type=hidden name=state value=" . $screen . ">";
-   echo "<script>window.onload = function(){document.forms[\"asker\"].submit();}</script>";
+   phtml("<input type=hidden name=state value=" . $screen . ">");
+   phtml("<script>window.onload = function(){document.forms[\"asker\"].submit();}</script>");
 }
 
 function button($screen, $label) {
-   echo "<button type=submit name=state value=" . $screen . ">" . $label . "</button>";
+   phtml("<button type=submit name=state value=" . $screen . ">" . $label . "</button>");
+}
+
+function uploadfile($dir, $name, $text) {
+   phtml($text . "<input type=file name=" . urlencode($name . " " . $dir) . ">");
 }
 
 function startrun($type, $var, $action) {
@@ -120,7 +128,7 @@ function startrun($type, $var, $action) {
    $f = fopen("/tmp/asker." . $pid . ".var", 'w');
    fwrite($f, serialize($_REQUEST));
    fclose($f);
-   echo "<script>
+   phtml("<script>
       var type=\"" . $type . "\";
       var time=0;
       var follow=0;
@@ -146,21 +154,23 @@ function startrun($type, $var, $action) {
                if (val == \"running\")
                   setTimeout(checkpid,timeout);
                else
-                  window.location.href=\"asker.php?resumerun=" . $pid . "&var=" . $var . "\";
+                  document.forms[\"asker\"].submit();
             }
          }
-         url=\"asker.php?pidcheck=" . $pid . "\";
+         url=\"pidcheck=" . $pid . "\";
          if (type == \"follow\")
             url=url + \"&offset=\" + follow;
-         ajax.open(\"GET\",url,true);
-         ajax.send(null);
+         ajax.open(\"POST\",\"asker.php\",true);
+         ajax.setRequestHeader(\"Content-type\", \"application/x-www-form-urlencoded\");
+         ajax.send(url);
       }
       checkpid();
       </script>
-      <div id=progress><div id=time>00:01</div></div>";
+      <div id=progress><div id=time>00:01</div></div>
+      <form accept-charset=UTF-8 name=asker enctype=multipart/form-data method=post><input type=hidden name=resumerun value=" . $pid . "><input type=hidden name=var value=". $var ."></form>");
    switch ($type) {
       case "follow":
-         echo "<div id=follow></div>";
+         phtml("<div id=follow></div>");
       break;
    }
    showend();
@@ -179,8 +189,8 @@ function resumerun($pid) {
 
 function showerror($error) {
    logline("Error: " . $error);
-   echo "<h1>Error</h1>";
-   echo $error;
+   phtml("<h1>Error</h1>");
+   phtml($error);
    showend();
 }
 
@@ -286,6 +296,7 @@ function processaction($action, $resumerun) {
       startrun(isset($cfg['type'])?$cfg['type']:"normal",$cfg['var'], $command);
    }
 
+
    if (isset($config[$state]['item'])) {
       foreach ($config[$state]['item'] as $id => $name) {
          $cmd = shift($name, "{");
@@ -326,6 +337,9 @@ function processaction($action, $resumerun) {
                   showerror("Screen " . $cfg['scr'] . " does not exist for autosubmit.");
                autosubmit($cfg['scr']);
             break;
+            case "upload":
+               uploadfile($cfg['dir'], $cfg['name'], $text);
+            break;
          }
       }
    }
@@ -339,6 +353,19 @@ function main() {
    global $user;
 
    sanitychecks();
+
+   if (isset($_FILES)) {
+   foreach ($_FILES as $id => $file) {
+        if ($file['error'] != 0)
+           showerror("Uploading file " . $file['name'] . " failed.");
+        $parts=explode(" ", urldecode($id));
+        $targetfile=$parts[1] . "/" . $file['name'];
+        if (file_exists($targetfile))
+           showerror("File " . $targetfile . " already exists.");
+        move_uploaded_file($file["tmp_name"], $targetfile);
+        $_REQUEST[$parts[0]] = $targetfile;
+      }
+   }
 
    $resumerun = 0;
    if (isset($_REQUEST['resumerun'])) {

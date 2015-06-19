@@ -343,6 +343,30 @@ Go to the screen nextaction automatically.
 
 `item[] = autosubmit{scr:nextaction}`
 
+#### upload
+
+Upload will give the option to upload files to the server. The name of the file will be assigned to a variable so it can be used for further processing.
+
+**Options**
+
+*dir* (mandatory)
+
+This is the path of the directory the file should be put in after upload. Errors will be generated when a file with the same name already exists in the directory or it is otherwise not possible to put the file in the directory.
+
+*name* (mandatory)
+
+This is the name of the variable the final filename should be assigned to. The directory is included with the filename.
+
+**Text to display**
+
+The text that will be displayed in front of the upload selection.
+
+**Example**
+
+Upload a file to /documents and put the full filename and path into the variable %FILE%.
+
+`item[] = upload{dir:/documents:name=%FILE%},Choose file to upload`
+
 # Screen design
 
 The design of the screens is something that is not done through asker. There is a configuration setting in each configuration file which you can use to reference a cascading stylesheet. There is an example in the repository which does at least some formatting.
