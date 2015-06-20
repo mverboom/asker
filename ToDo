@@ -1,9 +1,7 @@
 ToDo:
+- require input before submitting
+- add more input options?
+  - calendar
+  - time
 - input sanitize
-- check variable names vs. %% references
-- check quoting on input items
-- change select item to add number of items to show
-- warn when no authentication unless overruled
-- warn when no https unless overruled
 - add pointers to AD basic auth: http://www.held-im-ruhestand.de/software/apache-ldap-active-directory-authentication
-- verify keep for support multi line output

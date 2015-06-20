@@ -1,5 +1,9 @@
 body {
     background-color: #ffffff;
+    background-image: url("asker.png");
+    background-repeat: no-repeat;
+    background-position: right top;
+    background-attachment: fixed;
     color: #030303;
     font: 14px/1.5 verdana,sans-serif;
     padding-top: 2em;
