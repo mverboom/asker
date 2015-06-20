@@ -8,9 +8,12 @@ Asker tries to make it easy to design screens and is therby restricted to some b
 
 - plain text display
 - free form input fields
+- number input fields
+- password input fields
 - dropdown select boxes
 - checkboxes
 - buttons
+- file upload
 
 Input values come either form the dialogs or from an executed command. The values are assigned to variables that can be used in the dialog.
 
@@ -177,15 +180,15 @@ The command to run. It is possible to use variables when defining the command.
 
 Generate a process list, assing it to variable LIST and display the amount of time that has elapsed
 
-`action = {var:%LIST%},ps -ef`
+`run = {var:%LIST%},ps -ef`
 
 Create a directory listing and sleep 5 seconds with the output showing on screen and assigning it to variable DIR.
 
-`action = {type:follow,var:%DIR%},ls -al;sleep 5`
+`run = {type:follow,var:%DIR%},ls -al;sleep 5`
 
 Run the command the user has entered in a previous screen and is in the variable CMD. The output of the command is assigned to the variable OUTPUT.
 
-`action = {var:%OUTPUT%},%CMD%
+`run = {var:%OUTPUT%},%CMD%`
 
 ### item[] (optional)
 
