@@ -347,6 +347,12 @@ As lists can be quite long, the list of items a variable (for example the output
 
 Assign an id to the item that can be referenced from a cascading style sheet for formatting.
 
+*req* (optional)
+
+Defaults to false.
+
+When set to true the field must have a selection, otherwise the user can't go to a next screen.
+
 **Text to display**
 
 This text will be prepended to the select box. This text can contain variables that will be expanded.

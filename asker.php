@@ -134,10 +134,14 @@ function inputcheckbox($variable, $value, $question) {
 }
 
 
-function select($size, $variable, $list, $question,$id) {
+function select($required, $size, $variable, $list, $question,$id) {
    if ($id != "")
       phtml("<div id=" . $id . ">");
-   phtml($question . " <select name=" . $variable . " size=" . $size . ">");
+   if ($required == "true")
+      $req="required";
+   else
+      $req="";
+   phtml($question . " <select name=" . $variable . " size=" . $size . " " . $req . ">");
    foreach (explode("\n", urldecode($_REQUEST[$list])) as $item) {
       if ($item != "") {
          if (strpos($item,'	') !== false) {
@@ -176,7 +180,7 @@ function uploadfile($dir, $name, $text, $id) {
 function startrun($type, $var, $action) {
    $cmd=clearvars(substitute($action, $_REQUEST));
    logline("Running action: " . $cmd);
-   exec("(" . $cmd . ") > /tmp/asker.start 2>&1 & echo $!", $output, $retval);
+   exec("(" . $cmd . " ;echo ASKER$?ASKER ) > /tmp/asker.start 2>&1 & echo $!", $output, $retval);
    $pid = (int)$output[0];
    rename("/tmp/asker.start", "/tmp/asker." . $pid . ".out");
    $f = fopen("/tmp/asker." . $pid . ".var", 'w');
@@ -230,7 +234,7 @@ function startrun($type, $var, $action) {
    showend();
 }
 
-function resumerun($pid) {
+function resumerun($pid, &$retcode) {
    $file = "/tmp/asker." . $pid . ".var";
    if (!file_exists($file))
       showerror("Can not find command running state.");
@@ -242,7 +246,9 @@ function resumerun($pid) {
       showerror("Can not find command output.");
    $output = file_get_contents($file);
    unlink($file);
-   return($output);
+   $retcode=preg_replace('/.*ASKER(\d+)ASKER\n$/s', '$1', $output);
+   phtml($code);
+   return(preg_replace('/(.*)ASKER[\d+]ASKER\n$/s', '$1', $output));
 }
 
 function showerror($error) {
@@ -362,7 +368,7 @@ function processaction($action, $resumerun) {
                inputnumber($cfg['var'], $text,isset($cfg['req'])?$cfg['req']:"",isset($cfg['min'])?$cfg['min']:"",isset($cfg['max'])?$cfg['max']:"",isset($cfg['id'])?$cfg['id']:"");
             break;
             case "select":
-               select(isset($cfg['size'])?$cfg['size']:1, $cfg['var'], $cfg['list'], $text,isset($cfg['id'])?$cfg['id']:"");
+               select(isset($cfg['req'])?$cfg['req']:"", isset($cfg['size'])?$cfg['size']:1, $cfg['var'], $cfg['list'], $text,isset($cfg['id'])?$cfg['id']:"");
             break;
             case "button":
                if (!isset($config[$cfg['scr']]))
@@ -417,7 +423,7 @@ function main() {
    if (isset($_REQUEST['resumerun'])) {
       $pid = $_REQUEST['resumerun'];
       $var = $_REQUEST['var'];
-      $_REQUEST["$var"] = resumerun($pid);
+      $_REQUEST["$var"] = resumerun($pid, $retcode);
       $resumerun = 1;
    }
 
