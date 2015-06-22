@@ -93,6 +93,10 @@ pre {
 }
 */
 
+#italic {
+    font-style: italic;
+}
+
 #time:before {
   content: "Running: ";
 }

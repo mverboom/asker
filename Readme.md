@@ -204,7 +204,9 @@ Text is a very basic item. It will display the text following it on the screen.
 
 **Options**
 
-None
+*id* (optional)
+
+Assign an id to the item that can be referenced from a cascading style sheet for formatting.
 
 **Text to display**
 
@@ -236,6 +238,10 @@ Defaults to 30.
 
 The size in number of characters for the input field.
 
+*id* (optional)
+
+Assign an id to the item that can be referenced from a cascading style sheet for formatting.
+
 **Text to display**
 
 This text will be prepended to the input box. This text can contain variables that will be expanded.
@@ -262,6 +268,11 @@ This is the name of the variable the input of the user will be assigned to.
 Defaults to 10.
 
 The size in number of characters for the input field.
+
+*id* (optional)
+
+Assign an id to the item that can be referenced from a cascading style sheet for formatting.
+
 **Text to display**
 
 This text will be prepended to the input box. This text can contain variables that will be expanded.
@@ -297,6 +308,10 @@ Defaults to false.
 
 When set to true the field must be filled out, otherwise the user can't go to a next screen.
 
+*id* (optional)
+
+Assign an id to the item that can be referenced from a cascading style sheet for formatting.
+
 **Text to display**
 
 This text will be prepended to the input box. This text can contain variables that will be expanded.
@@ -328,6 +343,10 @@ This is the name of the variable the selection of the user will be assigned to.
 
 As lists can be quite long, the list of items a variable (for example the output of a run). Each item for the list is seperated by a newline. If an item contains a tab character, the part before the tab is used to assign to the variable if the item is choosen. The part after the tab is being shown to the user. This can for example be useful when showing a list of users on a system. Before the tab the login account of the user is used and after the tab the full user name.
 
+*id* (optional)
+
+Assign an id to the item that can be referenced from a cascading style sheet for formatting.
+
 **Text to display**
 
 This text will be prepended to the select box. This text can contain variables that will be expanded.
@@ -352,6 +371,10 @@ This is the name of the variable the selection of the user will be assigned to.
 
 If the user checks the checkbox, this value will be assigned to the variable. This value will not be shown to the user.
 
+*id* (optional)
+
+Assign an id to the item that can be referenced from a cascading style sheet for formatting.
+
 **Text to display**
 
 The text that is shown next to the checkbox.
@@ -371,6 +394,10 @@ A button is used to transition to a different screen.
 *scr* (mandatory)
 
 This is the name of the screen that should be shown when the button is pressed.
+
+*id* (optional)
+
+Assign an id to the item that can be referenced from a cascading style sheet for formatting.
 
 **Text to display**
 
@@ -427,6 +454,10 @@ This is the path of the directory the file should be put in after upload. Errors
 *name* (mandatory)
 
 This is the name of the variable the final filename should be assigned to. The directory is included with the filename.
+
+*id* (optional)
+
+Assign an id to the item that can be referenced from a cascading style sheet for formatting.
 
 **Text to display**
 

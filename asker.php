@@ -1,11 +1,11 @@
-<?
+<?php
 // Asker by Mark Verboom
 //
-$CONFIGDIR="configs";
-$NAME="Asker";
-$VERSION="0.65";
-$OVERRULE_SSL=false;
-$OVERRULE_AUTH=false;
+define("CONFIGDIR", "configs");
+define("NAME", "Asker");
+define("VERSION", "0.67");
+define("OVERRULE_SSL", false);
+define("OVERRULE_AUTH", false);
 
 // Do not cache output
 header("Expires: Mon, 26 Jul 1990 05:00:00 GMT");
@@ -23,16 +23,41 @@ function substitute($text, $array) {
 }
 
 function phtml($text) {
+   if (func_num_args() > 1 && func_get_arg(1) != "")
+      printf("<div id=%s>\n", func_get_arg(1));
    printf("%s\n", $text);
+   if (func_num_args() > 1 && func_get_arg(1) != "")
+      printf("</div>\n");
 }
 
 function clearvars($text) {
    return preg_replace("/%.*%/", "", $text);  
 }
 
-function showtext($data) {
+function showtext($data, $id) {
    $output = substitute($data, $_REQUEST);
-   phtml(clearvars($output) . "<br>");
+   phtml(clearvars($output) . "<br>", $id);
+}
+
+function logopen($config) {
+   if (isset($config['start']['log'])) {
+      $logconfig = $config['start']['log'];
+      $logtype = shift($logconfig, ",");
+      switch($logtype) {
+         case "file":
+            $GLOBALS['logdata'] = fopen($logconfig, "a");
+            if ($GLOBALS['logdata'] == FALSE)
+               showerror("Unable to open logfile: " . $logconfig);
+            $GLOBALS['log'] = $logtype;
+         break;
+         case "syslog":
+            $GLOBALS['logdata'] = $logconfig;
+            $GLOBALS['log'] = $logtype;
+        break;
+      }
+   }
+   else
+      $GLOBALS['log'] = FALSE;
 }
 
 function logline($loginfo) {
@@ -50,12 +75,12 @@ function logline($loginfo) {
 }
 
 function showstart($name, $title, $action, $css) {
-   phtml("<html><head><title>" . $GLOBALS["NAME"] . ": " . $name . " - " . $title . "</title>");
+   phtml("<html><head><title>" . NAME . ": " . $name . " - " . $title . "</title>");
    if ($css != "")
       phtml("<link rel=stylesheet type=text/css href=" . $css . ">");
 
    phtml("</head>");
-   phtml("<div id=heading>" . $GLOBALS['user'] . "@" . $GLOBALS["NAME"] . "(" . $action . "): " . $name . " - " . $title . "</div>");
+   phtml("<div id=heading>" . $GLOBALS['user'] . "@" . NAME . "(" . $action . "): " . $name . " - " . $title . "</div>");
    phtml("<h1>" . $name . "</h1>");
    phtml("<h2>" . $title . "</h2>");
    phtml("<form accept-charset=UTF-8 name=asker enctype=multipart/form-data method=post>");
@@ -75,23 +100,23 @@ function showend() {
    exit;
 }
 
-function inputtext($variable, $question, $size, $required) {
+function inputtext($variable, $question, $size, $required, $id) {
    if ($required == "true")
       $req="required";
    else
       $req="";
-   phtml($question . " <input type=text name=" . $variable . " size=" . $size ." maxlength=" . $size . " " . $req . "><br>");
+   phtml($question . " <input type=text name=" . $variable . " size=" . $size ." maxlength=" . $size . " " . $req . "><br>", $id);
 }
 
-function inputpassword($variable, $question, $size, $required) {
+function inputpassword($variable, $question, $size, $required, $id) {
    if ($required == "true")
       $req="required";
    else
       $req="";
-   phtml($question . " <input type=password name=" . $variable . " size=" . $size ." maxlength=" . $size . " " . $req . "><br>");
+   phtml($question . " <input type=password name=" . $variable . " size=" . $size ." maxlength=" . $size . " " . $req . "><br>", $id);
 }
 
-function inputnumber($variable, $question, $required, $min, $max) {
+function inputnumber($variable, $question, $required, $min, $max, $id) {
    if ($required == "true")
       $req="required";
    else
@@ -100,16 +125,18 @@ function inputnumber($variable, $question, $required, $min, $max) {
       $min="min=".$min;
    if ($max != "")
       $max="max=".$max;
-   phtml($question . " <input type=number name=" . $variable . " " . $req . " " . $min . " " . $max . "><br>");
+   phtml($question . " <input type=number name=" . $variable . " " . $req . " " . $min . " " . $max . "><br>", $id);
 }
 
 
 function inputcheckbox($variable, $value, $question) {
-   phtml("<input type=checkbox name=" . $variable . " value=" . $value . ">" . $question ."</input><br>");
+   phtml("<input type=checkbox name=" . $variable . " value=" . $value . ">" . $question ."</input><br>", $id);
 }
 
 
-function select($size, $variable, $list, $question) {
+function select($size, $variable, $list, $question,$id) {
+   if ($id != "")
+      phtml("<div id=" . $id . ">");
    phtml($question . " <select name=" . $variable . " size=" . $size . ">");
    foreach (explode("\n", urldecode($_REQUEST[$list])) as $item) {
       if ($item != "") {
@@ -121,6 +148,8 @@ function select($size, $variable, $list, $question) {
       }
    }
    phtml("</select><br>");
+   if ($id != "")
+      phtml("</div>");
 }
 
 function keep($variable) {
@@ -136,12 +165,12 @@ function autosubmit($screen) {
    phtml("<script>window.onload = function(){document.forms[\"asker\"].submit();}</script>");
 }
 
-function button($screen, $label) {
-   phtml("<button type=submit name=state value=" . $screen . ">" . $label . "</button>");
+function button($screen, $label, $id) {
+   phtml("<button type=submit name=state value=" . $screen . ">" . $label . "</button>", $id);
 }
 
-function uploadfile($dir, $name, $text) {
-   phtml($text . "<input type=file name=" . urlencode($name . " " . $dir) . ">");
+function uploadfile($dir, $name, $text, $id) {
+   phtml($text . "<input type=file name=" . urlencode($name . " " . $dir) . ">", $id);
 }
 
 function startrun($type, $var, $action) {
@@ -203,10 +232,14 @@ function startrun($type, $var, $action) {
 
 function resumerun($pid) {
    $file = "/tmp/asker." . $pid . ".var";
+   if (!file_exists($file))
+      showerror("Can not find command running state.");
    $rest = file_get_contents($file);
    $_REQUEST = unserialize($rest);
    unlink($file);
    $file = "/tmp/asker." . $pid . ".out";
+   if (!file_exists($file))
+      showerror("Can not find command output.");
    $output = file_get_contents($file);
    unlink($file);
    return($output);
@@ -229,12 +262,12 @@ function shift(&$string, $seperator) {
 }
 
 function sanitychecks() {
-   if ( !$GLOBALS['OVERRULE_SSL'] && !(isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') and
+   if ( !OVERRULE_SSL && !(isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') and
       !(!empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] == 'https' || !empty($_SERVER['HTTP_X_FORWARDED_SSL']) && $_SERVER['HTTP_X_FORWARDED_SSL'] == 'on') 
       )
       showerror("Communication does not seem to be encrypted.");
 
-   if ( !$GLOBALS['OVERRULE_AUTH'] && !isset($_SERVER['PHP_AUTH_USER']))
+   if ( !OVERRULE_AUTH && !isset($_SERVER['PHP_AUTH_USER']))
       showerror("There seems to be no authentication on the communcation.");
 
    if (isset($_SERVER['PHP_AUTH_USER']))
@@ -244,9 +277,9 @@ function sanitychecks() {
 }
 
 function readconfig($action) {
-      if (is_writable($GLOBALS["CONFIGDIR"]))
-         showerror("Configuration directory " . $GLOBALS["CONFIGDIR"] . " is writable by the web user. This is really insecure.");
-      $configfile = $GLOBALS["CONFIGDIR"] . "/" . $action. ".ini";
+      if (is_writable(CONFIGDIR))
+         showerror("Configuration directory " . CONFIGDIR . " is writable by the web user. This is really insecure.");
+      $configfile = CONFIGDIR . "/" . $action. ".ini";
       if (preg_match('/^[a-z0-9-\/]+\.ini$/', $configfile)) {
          if (file_exists($configfile)) {
             if (is_writable($configfile))
@@ -262,27 +295,6 @@ function readconfig($action) {
       } else
          showerror("Configuration file " . $configfile . " contains invalid characters.");
    return $config;
-}
-
-function logopen($config) {
-   if (isset($config['start']['log'])) {
-      $logconfig = $config['start']['log'];
-      $logtype = shift($logconfig, ",");
-      switch($logtype) {
-         case "file":
-            $GLOBALS['logdata'] = fopen($logconfig, "a");
-            if ($GLOBALS['logdata'] == FALSE)
-               showerror("Unable to open logfile: " . $logconfig);
-            $GLOBALS['log'] = $logtype;
-         break;
-         case "syslog":
-            $GLOBALS['logdata'] = $logconfig;
-            $GLOBALS['log'] = $logtype;
-        break;
-      }
-   }
-   else
-      $GLOBALS['log'] = FALSE;
 }
 
 function processaction($action, $resumerun) {
@@ -338,27 +350,27 @@ function processaction($action, $resumerun) {
 
          switch ($cmd) {
             case "text":
-               showtext($text);
+               showtext($text,isset($cfg['id'])?$cfg['id']:"");
             break;
             case "input":
-               inputtext($cfg['var'], $text,isset($cfg['size'])?$cfg['size']:30,isset($cfg['req'])?$cfg['req']:"");
+               inputtext($cfg['var'], $text,isset($cfg['size'])?$cfg['size']:30,isset($cfg['req'])?$cfg['req']:"",isset($cfg['id'])?$cfg['id']:"");
             break;
             case "password":
-               inputpassword($cfg['var'], $text,isset($cfg['size'])?$cfg['size']:10,isset($cfg['req'])?$cfg['req']:"");
+               inputpassword($cfg['var'], $text,isset($cfg['size'])?$cfg['size']:10,isset($cfg['req'])?$cfg['req']:"",isset($cfg['id'])?$cfg['id']:"");
             break;
             case "number":
-               inputnumber($cfg['var'], $text,isset($cfg['req'])?$cfg['req']:"",isset($cfg['min'])?$cfg['min']:"",isset($cfg['max'])?$cfg['max']:"");
+               inputnumber($cfg['var'], $text,isset($cfg['req'])?$cfg['req']:"",isset($cfg['min'])?$cfg['min']:"",isset($cfg['max'])?$cfg['max']:"",isset($cfg['id'])?$cfg['id']:"");
             break;
             case "select":
-               select(isset($cfg['size'])?$cfg['size']:1, $cfg['var'], $cfg['list'], $text);
+               select(isset($cfg['size'])?$cfg['size']:1, $cfg['var'], $cfg['list'], $text,isset($cfg['id'])?$cfg['id']:"");
             break;
             case "button":
                if (!isset($config[$cfg['scr']]))
-                  showerror("Screen " . $cfg['scr'] . " does not exist in button " . $text . ".");
-               button($cfg['scr'], $text);
+                  showerror("Screen " . $cfg['scr'] . " does not exist in button " . $text . ".",isset($cfg['id'])?$cfg['id']:"");
+               button($cfg['scr'], $text,isset($cfg['id'])?$cfg['id']:"");
             break;
             case "checkbox":
-               inputcheckbox($cfg['var'], $cfg['val'], $text);
+               inputcheckbox($cfg['var'], $cfg['val'], $text,isset($cfg['id'])?$cfg['id']:"");
             break;
             case "keep":
                keep($cfg['var']);
@@ -369,7 +381,7 @@ function processaction($action, $resumerun) {
                autosubmit($cfg['scr']);
             break;
             case "upload":
-               uploadfile($cfg['dir'], $cfg['name'], $text);
+               uploadfile($cfg['dir'], $cfg['name'], $text,isset($cfg['id'])?$cfg['id']:"");
             break;
          }
       }
