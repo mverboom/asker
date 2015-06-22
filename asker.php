@@ -180,7 +180,7 @@ function uploadfile($dir, $name, $text, $id) {
 function startrun($type, $var, $action) {
    $cmd=clearvars(substitute($action, $_REQUEST));
    logline("Running action: " . $cmd);
-   exec("(" . $cmd . " ;echo ASKER$?ASKER ) > /tmp/asker.start 2>&1 & echo $!", $output, $retval);
+   exec("(" . $cmd . " ;echo -n ASKER$?ASKER ) > /tmp/asker.start 2>&1 & echo $!", $output, $retval);
    $pid = (int)$output[0];
    rename("/tmp/asker.start", "/tmp/asker." . $pid . ".out");
    $f = fopen("/tmp/asker." . $pid . ".var", 'w');
@@ -246,9 +246,8 @@ function resumerun($pid, &$retcode) {
       showerror("Can not find command output.");
    $output = file_get_contents($file);
    unlink($file);
-   $retcode=preg_replace('/.*ASKER(\d+)ASKER\n$/s', '$1', $output);
-   phtml($code);
-   return(preg_replace('/(.*)ASKER[\d+]ASKER\n$/s', '$1', $output));
+   $retcode=preg_replace('/.*ASKER(\d+)ASKER$/s', '$1', $output);
+   return(preg_replace('/(.*)ASKER\d+ASKER$/s', '$1', $output));
 }
 
 function showerror($error) {
@@ -303,7 +302,18 @@ function readconfig($action) {
    return $config;
 }
 
-function processaction($action, $resumerun) {
+function parseoptions($cfgline, &$text) {
+   $runline = substr($cfgline,strpos($cfgline,'{') + 1);
+   $optionsraw = shift($runline, "}");
+   $text = substr($runline,1);
+   foreach (explode(",", $optionsraw) as $item) {
+      $s = explode(":", $item);
+      $cfg[$s[0]] = $s[1];
+   }
+   return($cfg);
+}
+
+function processaction($action, $resumerun, $runcode) {
    $config = readconfig($action);
    logopen($config);
    logline("Starting config: " . $action);
@@ -326,33 +336,30 @@ function processaction($action, $resumerun) {
    else
       $css="";
 
+   if (isset($config[$state]['run']) & $resumerun == 1 & $runcode != 0) {
+      $cfg = parseoptions($config[$state]['run'], $command);
+      if (isset($cfg['err']))
+         $state = $cfg['err'];
+      else
+         $showerror = 1;
+      unset($cfg);
+   }
+
    showstart($config['start']['name'], $config[$state]['title'], $action, $css);
 
+   if ($showerror == 1)
+      showerror("Errorcode " . $runcode . " when running command.");
+
    if (isset($config[$state]['run']) & $resumerun == 0) {
-      $runline = substr($config[$state]['run'],1);
-      $optionsraw = shift($runline, "}");
-      $command = substr($runline,1);
-      foreach (explode(",", $optionsraw) as $item) {
-         $s = explode(":", $item);
-         $cfg[$s[0]] = $s[1];
-      }
+      $cfg = parseoptions($config[$state]['run'], $command);
       startrun(isset($cfg['type'])?$cfg['type']:"normal",$cfg['var'], $command);
    }
 
-
    if (isset($config[$state]['item'])) {
       foreach ($config[$state]['item'] as $id => $name) {
-         $cmd = shift($name, "{");
-         $optionsraw = shift($name, "}");
-         $text = substr($name,1);
-
+         $cmd = substr($name, 0, strpos($name, "{"));
          unset($cfg);
-         if ($optionsraw != "") {
-            foreach (explode(",", $optionsraw) as $item) {
-               $s = explode(":", $item);
-               $cfg[$s[0]] = $s[1];
-            }
-         }
+         $cfg = parseoptions($name, $text);
 
          switch ($cmd) {
             case "text":
@@ -423,12 +430,12 @@ function main() {
    if (isset($_REQUEST['resumerun'])) {
       $pid = $_REQUEST['resumerun'];
       $var = $_REQUEST['var'];
-      $_REQUEST["$var"] = resumerun($pid, $retcode);
+      $_REQUEST["$var"] = resumerun($pid, $runcode);
       $resumerun = 1;
    }
 
    if (isset($_REQUEST['action'])) {
-      processaction($_REQUEST['action'], $resumerun);
+      processaction($_REQUEST['action'], $resumerun, $runcode);
    }
    elseif (isset($_REQUEST['pidcheck'])) {
       $pid = $_REQUEST['pidcheck'];

@@ -172,6 +172,10 @@ Follow will also show the time counter and show the output of the command while 
 
 The name of the variable the output of the command should be assigned to.
 
+*err* (optional)
+
+This option can point to a screen name which should be shown when an error occurs when running the command.
+
 **command**
 
 The command to run. It is possible to use variables when defining the command.
@@ -189,6 +193,10 @@ Create a directory listing and sleep 5 seconds with the output showing on screen
 Run the command the user has entered in a previous screen and is in the variable CMD. The output of the command is assigned to the variable OUTPUT.
 
 `run = {var:%OUTPUT%},%CMD%`
+
+Runt he command lkjsdf and go to screen error if an error occurs.
+
+`run = {var:%OUTPUT%,err:error},lkjsdf`
 
 ### item[] (optional)
 
