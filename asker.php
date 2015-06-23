@@ -3,7 +3,7 @@
 //
 define("CONFIGDIR", "configs");
 define("NAME", "Asker");
-define("VERSION", "0.67");
+define("VERSION", "0.68");
 define("OVERRULE_SSL", false);
 define("OVERRULE_AUTH", false);
 
@@ -128,6 +128,13 @@ function inputnumber($variable, $question, $required, $min, $max, $id) {
    phtml($question . " <input type=number name=" . $variable . " " . $req . " " . $min . " " . $max . "><br>", $id);
 }
 
+function inputedit($variable, $text, $required, $width, $height, $id) {
+   if ($required == "true")
+      $req="required";
+   else
+      $req="";
+   phtml("<textarea name=" . $variable . " " . $req . " cols=" . $width . " rows=" . $height . ">" . $text . "</textarea>", $id);
+}
 
 function inputcheckbox($variable, $value, $question) {
    phtml("<input type=checkbox name=" . $variable . " value=" . $value . ">" . $question ."</input><br>", $id);
@@ -360,6 +367,7 @@ function processaction($action, $resumerun, $runcode) {
          $cmd = substr($name, 0, strpos($name, "{"));
          unset($cfg);
          $cfg = parseoptions($name, $text);
+         $text = clearvars(substitute($text, $_REQUEST));
 
          switch ($cmd) {
             case "text":
@@ -374,6 +382,10 @@ function processaction($action, $resumerun, $runcode) {
             case "number":
                inputnumber($cfg['var'], $text,isset($cfg['req'])?$cfg['req']:"",isset($cfg['min'])?$cfg['min']:"",isset($cfg['max'])?$cfg['max']:"",isset($cfg['id'])?$cfg['id']:"");
             break;
+            case "edit":
+               inputedit($cfg['var'], $text,isset($cfg['req'])?$cfg['req']:"",isset($cfg['width'])?$cfg['width']:40,isset($cfg['height'])?$cfg['height']:20,isset($cfg['id'])?$cfg['id']:"");
+            break;
+
             case "select":
                select(isset($cfg['req'])?$cfg['req']:"", isset($cfg['size'])?$cfg['size']:1, $cfg['var'], $cfg['list'], $text,isset($cfg['id'])?$cfg['id']:"");
             break;

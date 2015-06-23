@@ -330,6 +330,49 @@ Ask the user's age (between 12 and 100) and assign it to variable AGE.
 
 `item[] = number{var:%AGE%,min:12,max:100},"Enter your age:"`
 
+#### edit
+
+Edit will show a text area the user can edit the content of.
+
+**Options**
+
+*var* (mandatory)
+
+This is the name of the variable the input of the user will be assigned to.
+
+*width* (optional)
+
+Defaults to 40.
+
+The width in characters of the area.
+
+*height* (optional)
+
+Defaults to 20.
+
+The height in characters of the area.
+
+*req* (optional)
+
+Defaults to false.
+
+When set to true the field must be filled out, otherwise the user can't go to a next screen.
+
+*id* (optional)
+
+Assign an id to the item that can be referenced from a cascading style sheet for formatting.
+
+**Text to display**
+
+This text will be the contents of the area.  This text can contain variables that will be expanded.
+
+**Example**
+
+The variable %TEXT contains the output of a command the user can edit in a 80x25 area. The result will be assigned to %INPUT%.
+
+Ask the user's age (between 12 and 100) and assign it to variable AGE.
+
+`item[] = edit{var:%INPUT%,width:80,height:25},%OUTPUT%`
 
 #### select
 
