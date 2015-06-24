@@ -520,6 +520,12 @@ Assign an id to the item that can be referenced from a cascading style sheet for
 
 The text that will be displayed in front of the upload selection.
 
+*req* (optional)
+
+Defaults to false.
+
+When set to true a file must have been selected, otherwise the user can't go to a next screen.
+
 **Example**
 
 Upload a file to /documents and put the full filename and path into the variable %FILE%.

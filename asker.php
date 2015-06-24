@@ -180,8 +180,12 @@ function button($screen, $label, $id) {
    phtml("<button type=submit name=state value=" . $screen . ">" . $label . "</button>", $id);
 }
 
-function uploadfile($dir, $name, $text, $id) {
-   phtml($text . "<input type=file name=" . urlencode($name . " " . $dir) . ">", $id);
+function uploadfile($dir, $name, $text, $id, $required) {
+   if ($required == "true")
+      $req="required";
+   else
+      $req="";
+   phtml($text . "<input type=file name=" . urlencode($name . " " . $dir) . " " . $req . ">", $id);
 }
 
 function startrun($type, $var, $action) {
@@ -313,14 +317,19 @@ function parseoptions($cfgline, &$text) {
    $runline = substr($cfgline,strpos($cfgline,'{') + 1);
    $optionsraw = shift($runline, "}");
    $text = substr($runline,1);
-   foreach (explode(",", $optionsraw) as $item) {
-      $s = explode(":", $item);
-      $cfg[$s[0]] = $s[1];
-   }
+   $cfg = "";
+   if ($optionsraw != "")
+      foreach (explode(",", $optionsraw) as $item) {
+         if (strpos($item, ":") == FALSE)
+            showerror("Error parsing options: " . $item);
+         $s = explode(":", $item);
+         $cfg[$s[0]] = $s[1];
+      }
    return($cfg);
 }
 
 function processaction($action, $resumerun, $runcode) {
+   $showerror = 0;
    $config = readconfig($action);
    logopen($config);
    logline("Starting config: " . $action);
@@ -406,7 +415,7 @@ function processaction($action, $resumerun, $runcode) {
                autosubmit($cfg['scr']);
             break;
             case "upload":
-               uploadfile($cfg['dir'], $cfg['name'], $text,isset($cfg['id'])?$cfg['id']:"");
+               uploadfile($cfg['dir'], $cfg['name'], $text,isset($cfg['id'])?$cfg['id']:"",isset($cfg['req'])?$cfg['req']:"");
             break;
          }
       }
@@ -415,10 +424,11 @@ function processaction($action, $resumerun, $runcode) {
    showend();
 }
 
-function uploadfiles() {
+function processuploadedfiles() {
    foreach ($_FILES as $id => $file) {
-        if ($file['error'] != 0)
-           showerror("Uploading file " . $file['name'] . " failed.");
+      if ($file['error'] != UPLOAD_ERR_NO_FILE) {
+         if ($file['error'] != UPLOAD_ERR_OK)
+            showerror("Uploading file " . $file['name'] . " failed.");
         $parts=explode(" ", urldecode($id));
         $targetfile=$parts[1] . "/" . $file['name'];
         if (file_exists($targetfile))
@@ -426,17 +436,19 @@ function uploadfiles() {
         move_uploaded_file($file["tmp_name"], $targetfile);
         $_REQUEST[$parts[0]] = $targetfile;
       }
+   }
 }
 
 function main() {
    global $log;
    global $logdata;
    global $user;
+   $runcode=0;
 
    sanitychecks();
 
    if (isset($_FILES))
-      uploadfiles();
+      processuploadedfiles();
 
    $resumerun = 0;
    if (isset($_REQUEST['resumerun'])) {
