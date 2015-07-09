@@ -34,11 +34,6 @@ function clearvars($text) {
    return preg_replace("/%.*%/", "", $text);  
 }
 
-function showtext($data, $id) {
-   $output = substitute($data, $_REQUEST);
-   phtml(clearvars($output) . "<br>", $id);
-}
-
 function logopen($config) {
    if (isset($config['start']['log'])) {
       $logconfig = $config['start']['log'];
@@ -100,11 +95,19 @@ function showend() {
    exit;
 }
 
+function showtext($data, $id) {
+
+   $output = substitute($data, $_REQUEST);
+   debug("type","text","id",$id,"text",$data);
+   phtml(clearvars($output) . "<br>", $id);
+}
+
 function inputtext($variable, $question, $size, $required, $id) {
    if ($required == "true")
       $req="required";
    else
       $req="";
+   debug("type", "input", "id", $id, "var", $variable, "req", $required, "size", $size, "text", $question);
    phtml($question . " <input type=text name=" . $variable . " size=" . $size ." maxlength=" . $size . " " . $req . "><br>", $id);
 }
 
@@ -113,10 +116,12 @@ function inputpassword($variable, $question, $size, $required, $id) {
       $req="required";
    else
       $req="";
+   debug("type","password","id", $id, "var", $variable, "req", $required, "size", $size, "text", $question);
    phtml($question . " <input type=password name=" . $variable . " size=" . $size ." maxlength=" . $size . " " . $req . "><br>", $id);
 }
 
 function inputnumber($variable, $question, $required, $min, $max, $id) {
+   debug("type","number","id", $id, "var", $variable, "req", $required, "min", $min, "max", $max, "text", $question);
    if ($required == "true")
       $req="required";
    else
@@ -133,13 +138,14 @@ function inputedit($variable, $text, $required, $width, $height, $id) {
       $req="required";
    else
       $req="";
+   debug("type","edit","id", $id, "var", $variable, "req", $required, "width", $width, "height", $height, "text", $text);
    phtml("<textarea name=" . $variable . " " . $req . " cols=" . $width . " rows=" . $height . ">" . $text . "</textarea>", $id);
 }
 
-function inputcheckbox($variable, $value, $question) {
+function inputcheckbox($variable, $value, $question, $id) {
+   debug("type","checkbox","id", $id, "var", $variable, "text", $question);
    phtml("<input type=checkbox name=" . $variable . " value=" . $value . ">" . $question ."</input><br>", $id);
 }
-
 
 function select($required, $size, $variable, $list, $question,$id) {
    if ($id != "")
@@ -148,6 +154,7 @@ function select($required, $size, $variable, $list, $question,$id) {
       $req="required";
    else
       $req="";
+   debug("type","select","id", $id, "var", $variable, "req", $required, "size", $size, "list", $list, "text", $question);
    phtml($question . " <select name=" . $variable . " size=" . $size . " " . $req . ">");
    foreach (explode("\n", urldecode($_REQUEST[$list])) as $item) {
       if ($item != "") {
@@ -167,6 +174,7 @@ function keep($variable) {
    $output="<input type=hidden name=" . $variable . " value=";
    
    $value = substitute($variable, $_REQUEST);
+   debug("type","keep", "var", $variable, "value", $value);
    phtml($output . urlencode($value) . ">");
 }
 
@@ -177,6 +185,7 @@ function autosubmit($screen) {
 }
 
 function button($screen, $label, $id) {
+   debug("type","button", "id", $id, "screen", $screen, "text", $label);
    phtml("<button type=submit name=state value=" . $screen . ">" . $label . "</button>", $id);
 }
 
@@ -185,6 +194,7 @@ function uploadfile($dir, $name, $text, $id, $required) {
       $req="required";
    else
       $req="";
+   debug("type","upload", "id", $id, "req", $required, "dir", $dir, "name", $name, "text", $text);
    phtml($text . "<input type=file name=" . urlencode($name . " " . $dir) . " " . $req . ">", $id);
 }
 
@@ -328,6 +338,23 @@ function parseoptions($cfgline, &$text) {
    return($cfg);
 }
 
+function debug($text) {
+   if ($GLOBALS['debug'] > 0) {
+      $output = "<div id=debug><div id=debuglabel>D</div><div id=debugtext>";
+      for($i = 0 ; $i < func_num_args(); $i+=2) {
+         $output = $output . func_get_arg($i) .": ";
+         $val=func_get_arg($i+1);
+         if ($val != "")
+            $output = $output . $val;
+         else
+            $output = $output . "(none)";
+         $output = $output . "<br>";
+      }
+      $output = $output . "</div></div>";
+      phtml($output);
+   }
+}
+
 function processaction($action, $resumerun, $runcode) {
    $showerror = 0;
    $config = readconfig($action);
@@ -443,10 +470,15 @@ function main() {
    global $log;
    global $logdata;
    global $user;
+   global $debug;
+   $debug=0;
    $runcode=0;
 
    sanitychecks();
 
+   if (isset($_REQUEST['debug']))
+      $debug = $_REQUEST['debug'];
+   
    if (isset($_FILES))
       processuploadedfiles();
 

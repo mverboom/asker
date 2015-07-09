@@ -48,6 +48,14 @@ If you no longer require the test configuration, I would urge you to remove the 
 
 The basic thought behind asker is to create a sequence of stateless web based screens, which can transition to eachother. You can go from screen to screen, showing information and requesting input from the user. The communication between screens is done by variables. Input from the user, or output from commands is assigned to variables that can be used in either the screen output or running commands.
 
+# Debugging
+
+It can sometimes be tricky to find why something is not working like intended. To help out a bit in such a situation it is possible to enable debug mode. This is done by passing an additional argument to the URL named debug with a value larger then 0. For example:
+
+http://yourserver/installdir/asker.php?action=test&debug=1
+
+With the default ccs this will show small red d's next to each element. Hovering over the d will show information on how asker has interpreted the configuration of the specified item.
+
 # Configuration
 
 The configuration uses the standard ini file format (because it was easy to implement :) ). The idea is that for each specific set of dialogs there is a seperate configuration file. When starting asker you need to specify which configuration file it needs to process through the action parameter. The value of the action parameter is the name of the ini configuration file without the extension.
@@ -260,7 +268,6 @@ Ask the user's name and assign it to variable USER.
 
 `item[] = input{var:%USER%},"Enter your name:"`
 
-
 #### password
 
 Password will show a input field for a password. The password will be assigned to a variable which can be used in another screen.
@@ -290,7 +297,6 @@ This text will be prepended to the input box. This text can contain variables th
 Ask the user's password (max 12 character) and assign it to variable PASSWORD.
 
 `item[] = password{var:%PASSWORD%,size:12},"Enter your password:"`
-
 
 #### number
 
