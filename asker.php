@@ -3,8 +3,8 @@
 //
 define("CONFIGDIR", "configs");
 define("NAME", "Asker");
-define("VERSION", "0.68");
-define("OVERRULE_SSL", false);
+define("VERSION", "0.70");
+define("OVERRULE_SSL", true);
 define("OVERRULE_AUTH", false);
 
 // Do not cache output
@@ -70,6 +70,8 @@ function logline($loginfo) {
 }
 
 function showstart($name, $title, $action, $css) {
+   $title = substitute($title, $_REQUEST);
+
    phtml("<html><head><title>" . NAME . ": " . $name . " - " . $title . "</title>");
    if ($css != "")
       phtml("<link rel=stylesheet type=text/css href=" . $css . ">");
@@ -198,7 +200,7 @@ function uploadfile($dir, $name, $text, $id, $required) {
    phtml($text . "<input type=file name=" . urlencode($name . " " . $dir) . " " . $req . ">", $id);
 }
 
-function startrun($type, $var, $action) {
+function startrun($type, $var, $id, $ignoreerr, $action) {
    $cmd=clearvars(substitute($action, $_REQUEST));
    logline("Running action: " . $cmd);
    exec("(" . $cmd . " ;echo -n ASKER$?ASKER ) > /tmp/asker.start 2>&1 & echo $!", $output, $retval);
@@ -226,7 +228,7 @@ function startrun($type, $var, $action) {
                ts=Math.floor(time / 1000);
                document.getElementById('time').innerHTML = (\"0\" + Math.floor(ts / 60)).slice(-2) + \":\" + (\"0\" + Math.floor(ts % 60)).slice(-2);
                if (type == \"follow\") {
-                  id = document.getElementById('follow');
+                  id = document.getElementById('" . $id . "');
                   id.innerHTML = id.innerHTML + data;
                   id.scrollTop = id.scrollHeight;
                }
@@ -249,7 +251,7 @@ function startrun($type, $var, $action) {
       <form accept-charset=UTF-8 name=asker enctype=multipart/form-data method=post><input type=hidden name=resumerun value=" . $pid . "><input type=hidden name=var value=". $var ."></form>");
    switch ($type) {
       case "follow":
-         phtml("<div id=follow></div>");
+         phtml("<div id=" . $id . "></div>");
       break;
    }
    showend();
@@ -384,7 +386,10 @@ function processaction($action, $resumerun, $runcode) {
       if (isset($cfg['err']))
          $state = $cfg['err'];
       else
-         $showerror = 1;
+         if (isset($cfg['ignoreerr']))
+            $_REQUEST[$cfg['ignoreerr']] = $runcode;
+         else
+            $showerror = 1;
       unset($cfg);
    }
 
@@ -395,7 +400,7 @@ function processaction($action, $resumerun, $runcode) {
 
    if (isset($config[$state]['run']) & $resumerun == 0) {
       $cfg = parseoptions($config[$state]['run'], $command);
-      startrun(isset($cfg['type'])?$cfg['type']:"normal",$cfg['var'], $command);
+      startrun(isset($cfg['type'])?$cfg['type']:"normal",$cfg['var'], isset($cfg['id'])?$cfg['id']:"follow",isset($cfg['ignoreerr'])?$cfg['ignoreerr']:"",$command);
    }
 
    if (isset($config[$state]['item'])) {
@@ -444,6 +449,13 @@ function processaction($action, $resumerun, $runcode) {
             case "upload":
                uploadfile($cfg['dir'], $cfg['name'], $text,isset($cfg['id'])?$cfg['id']:"",isset($cfg['req'])?$cfg['req']:"");
             break;
+            case "setvar":
+               if (!isset($cfg['var']))
+                  showerror("setvar requires a variable to be specified.");
+               $trans = array('\n' => "\n", '\t' => "\t");
+               $_REQUEST[$cfg['var']] = strtr($text, $trans);
+            break;
+
          }
       }
    }

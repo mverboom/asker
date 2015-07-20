@@ -184,6 +184,15 @@ The name of the variable the output of the command should be assigned to.
 
 This option can point to a screen name which should be shown when an error occurs when running the command.
 
+*ignoreerr* (optional)
+
+This option will not show an error when the command fails. It will assign the return value of the command to the variable the ignoreerr option is pointing to.
+
+*id* (optional)
+
+Assign an id to the item that can be referenced from a cascading style sheet for formatting.
+
+
 **command**
 
 The command to run. It is possible to use variables when defining the command.
@@ -471,6 +480,24 @@ The text that is shown on the button.
 Go to the runcommand screen when the user presses the button Run Command
 
 `item[] = button{scr:runcommand},Run Command`
+
+#### setvar
+
+setvar is used to assign a value to a variable. It can be used to assign variables a value to be used in a select item. The \t (tab) and \n (newline) will be evaluated when assigned to a variable. Make sure the variable to be used is assigned before the item using it. All items are evaluated in order.
+
+*var* (mandatory)
+
+This is the name of the variable which value has to be kept so it can be used in a next screen.
+
+**Value to assign**
+
+The text after the option is assigned to the specified variable name.
+
+**Example**
+
+Assign the variable LIST three items to be shown later in a select item.
+
+`item[] = setvar{var:%LIST%},1\tOne\n2\tTwo\n3\tThree
 
 #### keep
 
