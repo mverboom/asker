@@ -3,7 +3,7 @@
 //
 define("CONFIGDIR", "configs");
 define("NAME", "Asker");
-define("VERSION", "0.70");
+define("VERSION", "0.72");
 define("OVERRULE_SSL", true);
 define("OVERRULE_AUTH", false);
 
@@ -181,7 +181,6 @@ function keep($variable) {
 }
 
 function autosubmit($screen) {
-
    phtml("<input type=hidden name=state value=" . $screen . ">");
    phtml("<script>window.onload = function(){document.forms[\"asker\"].submit();}</script>");
 }
@@ -200,7 +199,63 @@ function uploadfile($dir, $name, $text, $id, $required) {
    phtml($text . "<input type=file name=" . urlencode($name . " " . $dir) . " " . $req . ">", $id);
 }
 
-function startrun($type, $var, $id, $ignoreerr, $action) {
+function iftest($var, $op, $then, $else, $val) {
+   $actionset=0;
+   $val1 = $_REQUEST[$var];
+   $val2 = substitute($val, $_REQUEST);
+   phtml("if " . $val1 . " " . $op . " " . $val2 . " then " . $then . " else " . $else . "<br>");
+   switch ($op) {
+      case "eq":
+         if ($val1 == $val2) {
+            autosubmit($then);
+            $actionset=1;
+         } else {
+            if ($else != "") {
+               autosubmit($else);
+               $actionset=1;
+            }
+         }
+      break;
+      case "ne":
+         if ($val1 != $val2) {
+            autosubmit($then);
+            $actionset=1;
+         } else {
+            if ($else != "") {
+               autosubmit($else);
+               $actionset=1;
+            }
+         }
+      break;
+      case "gt":
+         if ($val1 > $val2) {
+            autosubmit($then);
+            $actionset=1;
+         } else {
+            if ($else != "") {
+               autosubmit($else);
+               $actionset=1;
+            }
+         }
+      break;
+      case "lt":
+         if ($val1 < $val2) {
+            autosubmit($then);
+            $actionset=1;
+         } else {
+            if ($else != "") {
+               autosubmit($else);
+               $actionset=1;
+            }
+         }
+      break;
+      default: 
+         showerror("iftest unknown operand " . $op);
+   }
+   return $actionset;
+}
+
+function startrun($type, $var, $id, $ignoreerr, $text, $action) {
    $cmd=clearvars(substitute($action, $_REQUEST));
    logline("Running action: " . $cmd);
    exec("(" . $cmd . " ;echo -n ASKER$?ASKER ) > /tmp/asker.start 2>&1 & echo $!", $output, $retval);
@@ -226,7 +281,7 @@ function startrun($type, $var, $id, $ignoreerr, $action) {
                lines.splice(0,2);
                data=lines.join('\\n');
                ts=Math.floor(time / 1000);
-               document.getElementById('time').innerHTML = (\"0\" + Math.floor(ts / 60)).slice(-2) + \":\" + (\"0\" + Math.floor(ts % 60)).slice(-2);
+               document.getElementById('time').innerHTML = '" . $text . "<br>' + (\"0\" + Math.floor(ts / 60)).slice(-2) + \":\" + (\"0\" + Math.floor(ts % 60)).slice(-2);
                if (type == \"follow\") {
                   id = document.getElementById('" . $id . "');
                   id.innerHTML = id.innerHTML + data;
@@ -247,7 +302,7 @@ function startrun($type, $var, $id, $ignoreerr, $action) {
       }
       checkpid();
       </script>
-      <div id=progress><div id=time>00:01</div></div>
+      <div id=progress><div id=time></div></div>
       <form accept-charset=UTF-8 name=asker enctype=multipart/form-data method=post><input type=hidden name=resumerun value=" . $pid . "><input type=hidden name=var value=". $var ."></form>");
    switch ($type) {
       case "follow":
@@ -328,6 +383,8 @@ function readconfig($action) {
 function parseoptions($cfgline, &$text) {
    $runline = substr($cfgline,strpos($cfgline,'{') + 1);
    $optionsraw = shift($runline, "}");
+   if (strlen($runline) > 0 && substr($runline,0,1) != ",")
+      showerror("No , after options defined");
    $text = substr($runline,1);
    $cfg = "";
    if ($optionsraw != "")
@@ -335,6 +392,9 @@ function parseoptions($cfgline, &$text) {
          if (strpos($item, ":") == FALSE)
             showerror("Error parsing options: " . $item);
          $s = explode(":", $item);
+         $s[0] = strtolower($s[0]);
+         if ($s[0] != "var" && $s[0] != "list")
+            $s[1] = substitute($s[1], $_REQUEST);
          $cfg[$s[0]] = $s[1];
       }
    return($cfg);
@@ -400,7 +460,7 @@ function processaction($action, $resumerun, $runcode) {
 
    if (isset($config[$state]['run']) & $resumerun == 0) {
       $cfg = parseoptions($config[$state]['run'], $command);
-      startrun(isset($cfg['type'])?$cfg['type']:"normal",$cfg['var'], isset($cfg['id'])?$cfg['id']:"follow",isset($cfg['ignoreerr'])?$cfg['ignoreerr']:"",$command);
+      startrun(isset($cfg['type'])?$cfg['type']:"normal",$cfg['var'], isset($cfg['id'])?$cfg['id']:"follow",isset($cfg['ignoreerr'])?$cfg['ignoreerr']:"",isset($cfg['text'])?$cfg['text']:"Running",$command);
    }
 
    if (isset($config[$state]['item'])) {
@@ -415,47 +475,85 @@ function processaction($action, $resumerun, $runcode) {
                showtext($text,isset($cfg['id'])?$cfg['id']:"");
             break;
             case "input":
+               if (!isset($cfg['var']))
+                  showerror("Input requires option var to be defined.");
                inputtext($cfg['var'], $text,isset($cfg['size'])?$cfg['size']:30,isset($cfg['req'])?$cfg['req']:"",isset($cfg['id'])?$cfg['id']:"");
             break;
             case "password":
+               if (!isset($cfg['var']))
+                  showerror("Password requires option var to be defined.");
                inputpassword($cfg['var'], $text,isset($cfg['size'])?$cfg['size']:10,isset($cfg['req'])?$cfg['req']:"",isset($cfg['id'])?$cfg['id']:"");
             break;
             case "number":
+               if (!isset($cfg['var']))
+                  showerror("Number requires option var to be defined.");
                inputnumber($cfg['var'], $text,isset($cfg['req'])?$cfg['req']:"",isset($cfg['min'])?$cfg['min']:"",isset($cfg['max'])?$cfg['max']:"",isset($cfg['id'])?$cfg['id']:"");
             break;
             case "edit":
+               if (!isset($cfg['var']))
+                  showerror("Edit requires option var to be defined.");
                inputedit($cfg['var'], $text,isset($cfg['req'])?$cfg['req']:"",isset($cfg['width'])?$cfg['width']:40,isset($cfg['height'])?$cfg['height']:20,isset($cfg['id'])?$cfg['id']:"");
             break;
 
             case "select":
+               if (!isset($cfg['var']))
+                  showerror("Select requires option var to be defined.");
+               if (!isset($cfg['list']))
+                  showerror("Select requires option list to be defined.");
                select(isset($cfg['req'])?$cfg['req']:"", isset($cfg['size'])?$cfg['size']:1, $cfg['var'], $cfg['list'], $text,isset($cfg['id'])?$cfg['id']:"");
             break;
             case "button":
+               if (!isset($cfg['scr']))
+                  showerror("Button requires option scr to be defined.");
                if (!isset($config[$cfg['scr']]))
-                  showerror("Screen " . $cfg['scr'] . " does not exist in button " . $text . ".",isset($cfg['id'])?$cfg['id']:"");
+                  showerror("Button options scr references non existing screen ". $cfg['scr']);
                button($cfg['scr'], $text,isset($cfg['id'])?$cfg['id']:"");
             break;
             case "checkbox":
+               if (!isset($cfg['var']))
+                  showerror("Checkbox requires optoin var to be defined.");
                inputcheckbox($cfg['var'], $cfg['val'], $text,isset($cfg['id'])?$cfg['id']:"");
             break;
             case "keep":
+               if (!isset($cfg['var']))
+                  showerror("Keep requires option var to be defined.");
                keep($cfg['var']);
             break;
             case "autosubmit":
+               if (!isset($cfg['scr']))
+                  showerror("Autosubmit requires option scr to be defined.");
                if (!isset($config[$cfg['scr']]))
                   showerror("Screen " . $cfg['scr'] . " does not exist for autosubmit.");
                autosubmit($cfg['scr']);
             break;
             case "upload":
+               if (!isset($cfg['dir']))
+                  showerror("Upload requires option dir to be defined.");
+               if (!isset($cfg['name']))
+                  showerror("Upload requires option name to be defined.");
                uploadfile($cfg['dir'], $cfg['name'], $text,isset($cfg['id'])?$cfg['id']:"",isset($cfg['req'])?$cfg['req']:"");
             break;
             case "setvar":
                if (!isset($cfg['var']))
-                  showerror("setvar requires a variable to be specified.");
+                  showerror("Setvar requires option var to be defined.");
                $trans = array('\n' => "\n", '\t' => "\t");
                $_REQUEST[$cfg['var']] = strtr($text, $trans);
             break;
-
+            case "if":
+               if (!isset($cfg['var']))
+                  showerror("If requires option var to be defined.");
+               if (!isset($cfg['op']))
+                  showerror("If requires option op to be defined.");
+               if (!isset($cfg['then']))
+                  showerror("If requires option then to be defined.");
+               if (!isset($config[$cfg['then']]))
+                  showerror("If option then references non existing screen.");
+               if (!isset($text))
+                  showerror("If requires option op to be defined.");
+               if (isset($cfg['else']) && !isset($config[$cfg['else']]))
+                  showerror("If option else references non existing screen.");
+               iftest($cfg['var'], $cfg['op'], $cfg['then'], isset($cfg['else'])?$cfg['else']:"",$text);
+            break;
          }
       }
    }

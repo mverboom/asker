@@ -188,10 +188,13 @@ This option can point to a screen name which should be shown when an error occur
 
 This option will not show an error when the command fails. It will assign the return value of the command to the variable the ignoreerr option is pointing to.
 
+*text* (optional)
+
+The value of this option will be shown as text above the time indicator when the command is running. If the option isn't specified, the text defaults to Running.
+
 *id* (optional)
 
 Assign an id to the item that can be referenced from a cascading style sheet for formatting.
-
 
 **command**
 
@@ -223,11 +226,31 @@ The value of the item[] defines what it will do. There are different kinds of ou
 
 Below follows a list of different types of items.
 
-#### text
+#### autosubmit
 
-Text is a very basic item. It will display the text following it on the screen.
+This will not wait for the user to press a button, but automatically transition to the next screen. This can be useful if more then one action needs to be ran. Remember to use a keep statement if you want to preserve the output of actions across screens.
 
 **Options**
+
+*scr* (mandatory)
+
+This is the name of the screen that should be shown when the button is pressed.
+
+**Example**
+
+Go to the screen nextaction automatically.
+
+`item[] = autosubmit{scr:nextaction}`
+
+#### button
+
+A button is used to transition to a different screen.
+
+**Options**
+
+*scr* (mandatory)
+
+This is the name of the screen that should be shown when the button is pressed.
 
 *id* (optional)
 
@@ -235,63 +258,28 @@ Assign an id to the item that can be referenced from a cascading style sheet for
 
 **Text to display**
 
-This is the text to display. Variable substitution is applied to the text. It is also possible to use HTML code in the text.
+The text that is shown on the button.
 
 **Example**
 
-Show text This is a test
+Go to the runcommand screen when the user presses the button Run Command
 
-`item[] = text{},"This is a test"`
+`item[] = button{scr:runcommand},Run Command`
 
-Show text Hi with the name of the user in italic from the variable USER read in the previous screen.
 
-`item[] = text{},"Hi <i>%USER%</i>"`
+#### checkbox
 
-#### input
-
-Input will show a free form input field in which the user can fill out text. The text will be assigned to a variable which can be used in another screen.
-
-**Options**
-
-*var* (mandatory)
-
-This is the name of the variable the input of the user will be assigned to.
-
-*size* (optional)
-
-Defaults to 30.
-
-The size in number of characters for the input field.
-
-*id* (optional)
-
-Assign an id to the item that can be referenced from a cascading style sheet for formatting.
-
-**Text to display**
-
-This text will be prepended to the input box. This text can contain variables that will be expanded.
-
-**Example**
-
-Ask the user's name and assign it to variable USER.
-
-`item[] = input{var:%USER%},"Enter your name:"`
-
-#### password
-
-Password will show a input field for a password. The password will be assigned to a variable which can be used in another screen.
+A checkbox will create a checkbox with text the user can select (or not).
 
 **Options**
 
 *var* (mandatory)
 
-This is the name of the variable the input of the user will be assigned to.
+This is the name of the variable the selection of the user will be assigned to.
 
-*size* (optional)
+*val* (mandatory)
 
-Defaults to 10.
-
-The size in number of characters for the input field.
+If the user checks the checkbox, this value will be assigned to the variable. This value will not be shown to the user.
 
 *id* (optional)
 
@@ -299,51 +287,13 @@ Assign an id to the item that can be referenced from a cascading style sheet for
 
 **Text to display**
 
-This text will be prepended to the input box. This text can contain variables that will be expanded.
+The text that is shown next to the checkbox.
 
 **Example**
 
-Ask the user's password (max 12 character) and assign it to variable PASSWORD.
+Give the user the option to run a command in debug mode.
 
-`item[] = password{var:%PASSWORD%,size:12},"Enter your password:"`
-
-#### number
-
-Number will show a free form input field in which the user can fill out a number. The number will be assigned to a variable which can be used in another screen.
-
-**Options**
-
-*var* (mandatory)
-
-This is the name of the variable the input of the user will be assigned to.
-
-*min* (optional)
-
-The lowest number that can be inputted.
-
-*max* (optional)
-
-The highest number that can be inputted.
-
-*req* (optional)
-
-Defaults to false.
-
-When set to true the field must be filled out, otherwise the user can't go to a next screen.
-
-*id* (optional)
-
-Assign an id to the item that can be referenced from a cascading style sheet for formatting.
-
-**Text to display**
-
-This text will be prepended to the input box. This text can contain variables that will be expanded.
-
-**Example**
-
-Ask the user's age (between 12 and 100) and assign it to variable AGE.
-
-`item[] = number{var:%AGE%,min:12,max:100},"Enter your age:"`
+`item[] = checkbox{var:%DEBUG%,val:-d},"Debug mode"`
 
 #### edit
 
@@ -389,6 +339,156 @@ Ask the user's age (between 12 and 100) and assign it to variable AGE.
 
 `item[] = edit{var:%INPUT%,width:80,height:25},%OUTPUT%`
 
+#### if
+
+If will test a variable against a value and allow to jump to a specific screen depending on the outcome of the test.
+
+**Options**
+
+*var* (mandatory)
+
+Defines the name of the variable who's value has to be tested.
+
+*op* (mandatory)
+
+Defines the name of the operator that needs to be used. The following operators are available:
+* eq: Equals
+* ne: Not equals
+* lt: Less then
+* gt: Greater then
+
+*then* (mandator)
+
+Defines the name of the screen to jump to when the test evaluates to true.
+
+*else* (optional)
+
+Defines the name of the screen to jump to when the test evaluates to false.
+
+**value** (mandatory)
+
+The value the variable needs to be tested against.
+
+**Example**
+
+Compare variable VAR to 1 and jump to the screen ok if it is one, otherwise jump to screen notok
+
+`item[] = if{var:%VAR%,op:eq,then:ok,else:notok},1`
+
+#### input
+
+Input will show a free form input field in which the user can fill out text. The text will be assigned to a variable which can be used in another screen.
+
+**Options**
+
+*var* (mandatory)
+
+This is the name of the variable the input of the user will be assigned to.
+
+*size* (optional)
+
+Defaults to 30.
+
+The size in number of characters for the input field.
+
+*id* (optional)
+
+Assign an id to the item that can be referenced from a cascading style sheet for formatting.
+
+**Text to display**
+
+This text will be prepended to the input box. This text can contain variables that will be expanded.
+
+**Example**
+
+Ask the user's name and assign it to variable USER.
+
+`item[] = input{var:%USER%},"Enter your name:"`
+
+#### keep
+
+keep is a special case. If a variable has been assigned a value in a previous screen, but it is not going to be used in the current screen but in a next one, you can preserve the value of the variable by using keep. If keep isn't used, the variable value will be lost in the next screen.
+
+**Options**
+
+*var* (mandatory)
+
+This is the name of the variable which value has to be kept so it can be used in a next screen.
+
+**Example**
+
+Keep the value of variable ITEM.
+
+`item[] = keep{var:%ITEM%}`
+
+#### number
+
+Number will show a free form input field in which the user can fill out a number. The number will be assigned to a variable which can be used in another screen.
+
+**Options**
+
+*var* (mandatory)
+
+This is the name of the variable the input of the user will be assigned to.
+
+*min* (optional)
+
+The lowest number that can be inputted.
+
+*max* (optional)
+
+The highest number that can be inputted.
+
+*req* (optional)
+
+Defaults to false.
+
+When set to true the field must be filled out, otherwise the user can't go to a next screen.
+
+*id* (optional)
+
+Assign an id to the item that can be referenced from a cascading style sheet for formatting.
+
+**Text to display**
+
+This text will be prepended to the input box. This text can contain variables that will be expanded.
+
+**Example**
+
+Ask the user's age (between 12 and 100) and assign it to variable AGE.
+
+`item[] = number{var:%AGE%,min:12,max:100},"Enter your age:"`
+
+#### password
+
+Password will show a input field for a password. The password will be assigned to a variable which can be used in another screen.
+
+**Options**
+
+*var* (mandatory)
+
+This is the name of the variable the input of the user will be assigned to.
+
+*size* (optional)
+
+Defaults to 10.
+
+The size in number of characters for the input field.
+
+*id* (optional)
+
+Assign an id to the item that can be referenced from a cascading style sheet for formatting.
+
+**Text to display**
+
+This text will be prepended to the input box. This text can contain variables that will be expanded.
+
+**Example**
+
+Ask the user's password (max 12 character) and assign it to variable PASSWORD.
+
+`item[] = password{var:%PASSWORD%,size:12},"Enter your password:"`
+
 #### select
 
 The select input will show a list of items which the user can make a selection from.
@@ -429,58 +529,6 @@ Show a selection box with all usernames previously obtained with an action (assi
 
 `item[] = select{size:10,var:%USER%,list:%LIST%},"Choose user"`
 
-#### checkbox
-
-A checkbox will create a checkbox with text the user can select (or not).
-
-**Options**
-
-*var* (mandatory)
-
-This is the name of the variable the selection of the user will be assigned to.
-
-*val* (mandatory)
-
-If the user checks the checkbox, this value will be assigned to the variable. This value will not be shown to the user.
-
-*id* (optional)
-
-Assign an id to the item that can be referenced from a cascading style sheet for formatting.
-
-**Text to display**
-
-The text that is shown next to the checkbox.
-
-**Example**
-
-Give the user the option to run a command in debug mode.
-
-`item[] = checkbox{var:%DEBUG%,val:-d},"Debug mode"`
-
-#### button
-
-A button is used to transition to a different screen.
-
-**Options**
-
-*scr* (mandatory)
-
-This is the name of the screen that should be shown when the button is pressed.
-
-*id* (optional)
-
-Assign an id to the item that can be referenced from a cascading style sheet for formatting.
-
-**Text to display**
-
-The text that is shown on the button.
-
-**Example**
-
-Go to the runcommand screen when the user presses the button Run Command
-
-`item[] = button{scr:runcommand},Run Command`
-
 #### setvar
 
 setvar is used to assign a value to a variable. It can be used to assign variables a value to be used in a select item. The \t (tab) and \n (newline) will be evaluated when assigned to a variable. Make sure the variable to be used is assigned before the item using it. All items are evaluated in order.
@@ -499,37 +547,29 @@ Assign the variable LIST three items to be shown later in a select item.
 
 `item[] = setvar{var:%LIST%},1\tOne\n2\tTwo\n3\tThree
 
-#### keep
+#### text
 
-keep is a special case. If a variable has been assigned a value in a previous screen, but it is not going to be used in the current screen but in a next one, you can preserve the value of the variable by using keep. If keep isn't used, the variable value will be lost in the next screen.
-
-**Options**
-
-*var* (mandatory)
-
-This is the name of the variable which value has to be kept so it can be used in a next screen.
-
-**Example**
-
-Keep the value of variable ITEM.
-
-`item[] = keep{var:%ITEM%}`
-
-#### autosubmit
-
-This will not wait for the user to press a button, but automatically transition to the next screen. This can be useful if more then one action needs to be ran. Remember to use a keep statement if you want to preserve the output of actions across screens.
+Text is a very basic item. It will display the text following it on the screen.
 
 **Options**
 
-*scr* (mandatory)
+*id* (optional)
 
-This is the name of the screen that should be shown when the button is pressed.
+Assign an id to the item that can be referenced from a cascading style sheet for formatting.
+
+**Text to display**
+
+This is the text to display. Variable substitution is applied to the text. It is also possible to use HTML code in the text.
 
 **Example**
 
-Go to the screen nextaction automatically.
+Show text This is a test
 
-`item[] = autosubmit{scr:nextaction}`
+`item[] = text{},"This is a test"`
+
+Show text Hi with the name of the user in italic from the variable USER read in the previous screen.
+
+`item[] = text{},"Hi <i>%USER%</i>"`
 
 #### upload
 
