@@ -3,7 +3,7 @@
 //
 define("CONFIGDIR", "configs");
 define("NAME", "Asker");
-define("VERSION", "0.72");
+define("VERSION", "0.74");
 define("OVERRULE_SSL", true);
 define("OVERRULE_AUTH", false);
 
@@ -109,8 +109,12 @@ function inputtext($variable, $question, $size, $required, $id) {
       $req="required";
    else
       $req="";
+   if (isset($_REQUEST[$variable]))
+      $val="value=\"".$_REQUEST[$variable] . "\"";
+   else
+      $val="";
    debug("type", "input", "id", $id, "var", $variable, "req", $required, "size", $size, "text", $question);
-   phtml($question . " <input type=text name=" . $variable . " size=" . $size ." maxlength=" . $size . " " . $req . "><br>", $id);
+   phtml($question . " <input type=text name=" . $variable . " size=" . $size ." maxlength=" . $size . " " . $req . " " . $val . "><br>", $id);
 }
 
 function inputpassword($variable, $question, $size, $required, $id) {
@@ -118,21 +122,37 @@ function inputpassword($variable, $question, $size, $required, $id) {
       $req="required";
    else
       $req="";
+   if (isset($_REQUEST[$variable]))
+      $val="value=\"".$_REQUEST[$variable] . "\"";
+   else
+      $val="";
    debug("type","password","id", $id, "var", $variable, "req", $required, "size", $size, "text", $question);
-   phtml($question . " <input type=password name=" . $variable . " size=" . $size ." maxlength=" . $size . " " . $req . "><br>", $id);
+   phtml($question . " <input type=password name=" . $variable . " size=" . $size ." maxlength=" . $size . " " . $req . " " . $val . "><br>", $id);
 }
 
 function inputnumber($variable, $question, $required, $min, $max, $id) {
    debug("type","number","id", $id, "var", $variable, "req", $required, "min", $min, "max", $max, "text", $question);
+   $len=0;
    if ($required == "true")
       $req="required";
    else
       $req="";
-   if ($min != "")
+   if ($min != "") {
+      $len = strlen($min);
       $min="min=".$min;
-   if ($max != "")
+   }
+   if ($max != "") {
+      if (strlen($max) > $len)
+         $len = strlen($max);
       $max="max=".$max;
-   phtml($question . " <input type=number name=" . $variable . " " . $req . " " . $min . " " . $max . "><br>", $id);
+   }
+   if ($len == 0)
+      $len = 10;
+   if (isset($_REQUEST[$variable]))
+      $val="value=".$_REQUEST[$variable];
+   else
+      $val="";
+   phtml($question . " <input type=number name=" . $variable . " " . $req . " " . $min . " " . $max . " " . $val . " size=" . $len . "><br>", $id);
 }
 
 function inputedit($variable, $text, $required, $width, $height, $id) {
@@ -144,9 +164,13 @@ function inputedit($variable, $text, $required, $width, $height, $id) {
    phtml("<textarea name=" . $variable . " " . $req . " cols=" . $width . " rows=" . $height . ">" . $text . "</textarea>", $id);
 }
 
-function inputcheckbox($variable, $value, $question, $id) {
+function inputcheckbox($variable, $value, $question, $checked, $id) {
    debug("type","checkbox","id", $id, "var", $variable, "text", $question);
-   phtml("<input type=checkbox name=" . $variable . " value=" . $value . ">" . $question ."</input><br>", $id);
+   if ($checked != "")
+      $checked="checked";
+   else
+      $checked="";
+   phtml("<input type=checkbox name=" . $variable . " value=" . $value . " " . $checked . ">" . $question ."</input><br>", $id);
 }
 
 function select($required, $size, $variable, $list, $question,$id) {
@@ -158,13 +182,23 @@ function select($required, $size, $variable, $list, $question,$id) {
       $req="";
    debug("type","select","id", $id, "var", $variable, "req", $required, "size", $size, "list", $list, "text", $question);
    phtml($question . " <select name=" . $variable . " size=" . $size . " " . $req . ">");
+   if (isset($_REQUEST[$variable]))
+      $chosen = $_REQUEST[$variable];
+   else
+      $chosen = "";
    foreach (explode("\n", urldecode($_REQUEST[$list])) as $item) {
       if ($item != "") {
+         $selected = "";
          if (strpos($item,'	') !== false) {
             $split = explode("	", $item);
-            phtml("<option value=\"" . $split[0] . "\">" . $split[1]);
-         } else
-            phtml("<option value=\"" . $item . "\">" . $item . "</option>");
+            if ($split[0] == $chosen)
+               $selected = "selected";
+            phtml("<option value=\"" . $split[0] . "\" " . $selected . ">" . $split[1]);
+         } else {
+            if ($item == $chosen)
+               $selected = "selected";
+            phtml("<option value=\"" . $item . "\" " . $selected . ">" . $item . "</option>");
+         }
       }
    }
    phtml("</select><br>");
@@ -181,6 +215,7 @@ function keep($variable) {
 }
 
 function autosubmit($screen) {
+   debug("type","autosubmit", "screen", $screen);
    phtml("<input type=hidden name=state value=" . $screen . ">");
    phtml("<script>window.onload = function(){document.forms[\"asker\"].submit();}</script>");
 }
@@ -203,7 +238,7 @@ function iftest($var, $op, $then, $else, $val) {
    $actionset=0;
    $val1 = $_REQUEST[$var];
    $val2 = substitute($val, $_REQUEST);
-   phtml("if " . $val1 . " " . $op . " " . $val2 . " then " . $then . " else " . $else . "<br>");
+   debug("type","if", "val1", $val1, "op", $op, "val2", $val2, "then", $then, "else", $else);
    switch ($op) {
       case "eq":
          if ($val1 == $val2) {
@@ -512,7 +547,7 @@ function processaction($action, $resumerun, $runcode) {
             case "checkbox":
                if (!isset($cfg['var']))
                   showerror("Checkbox requires optoin var to be defined.");
-               inputcheckbox($cfg['var'], $cfg['val'], $text,isset($cfg['id'])?$cfg['id']:"");
+               inputcheckbox($cfg['var'], $cfg['val'], $text,isset($cfg['checked'])?$cfg['checked']:"", isset($cfg['id'])?$cfg['id']:"");
             break;
             case "keep":
                if (!isset($cfg['var']))

@@ -285,6 +285,10 @@ If the user checks the checkbox, this value will be assigned to the variable. Th
 
 Assign an id to the item that can be referenced from a cascading style sheet for formatting.
 
+*checked* (optional)
+
+If defined the checkbox will already be checked.
+
 **Text to display**
 
 The text that is shown next to the checkbox.
@@ -383,7 +387,7 @@ Input will show a free form input field in which the user can fill out text. The
 
 *var* (mandatory)
 
-This is the name of the variable the input of the user will be assigned to.
+This is the name of the variable the input of the user will be assigned to. If var has already been assigned a value, the value will be set as the content of the input field.
 
 *size* (optional)
 
@@ -429,7 +433,7 @@ Number will show a free form input field in which the user can fill out a number
 
 *var* (mandatory)
 
-This is the name of the variable the input of the user will be assigned to.
+This is the name of the variable the input of the user will be assigned to. If var has already been assigned a value, the value will be set as the content of the input field.
 
 *min* (optional)
 
@@ -437,7 +441,7 @@ The lowest number that can be inputted.
 
 *max* (optional)
 
-The highest number that can be inputted.
+The highest number that can be inputted. If specified the size of the input field is also sized to the number of positions required for the maximum input.
 
 *req* (optional)
 
@@ -467,7 +471,7 @@ Password will show a input field for a password. The password will be assigned t
 
 *var* (mandatory)
 
-This is the name of the variable the input of the user will be assigned to.
+This is the name of the variable the input of the user will be assigned to. If var has already been assigned a value, the value will be set as the content of the input field.
 
 *size* (optional)
 
@@ -503,7 +507,7 @@ This is the number of items that will be shown at a time. When 1 is specified it
 
 *var* (mandatory)
 
-This is the name of the variable the selection of the user will be assigned to.
+This is the name of the variable the selection of the user will be assigned to. If var has already been assigned a value, the option with that value will be pre selected.
 
 *list* (mandatory)
 
