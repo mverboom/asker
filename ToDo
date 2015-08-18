@@ -1,7 +1,2 @@
 ToDo:
-- require input before submitting
-- add more input options?
-  - calendar
-  - time
-- input sanitize
 - add pointers to AD basic auth: http://www.held-im-ruhestand.de/software/apache-ldap-active-directory-authentication

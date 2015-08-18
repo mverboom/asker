@@ -19,6 +19,12 @@ Input values come either form the dialogs or from an executed command. The value
 
 The configs directory contains a test configuration which tries to demo some of the features.
 
+Some screenshots of Asker in action with a configuration that acts as a webfrontend for the https://testssl.sh/ script.
+
+![Input the variables to pass to the scan](screenshots/asker-sitetoscan.png)
+![Live generated output while scanning]](screenshots/asker-scanning.png)
+![Complete scan results after command has completed](screenshots/asker-donescanning.png)
+
 ## Installation
 
 Asker has only been tested on Debian/Linux at this moment. Currently it has been tested with the following components:
