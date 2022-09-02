@@ -421,7 +421,7 @@ function parseoptions($cfgline, &$text) {
    if (strlen($runline) > 0 && substr($runline,0,1) != ",")
       showerror("No , after options defined");
    $text = substr($runline,1);
-   $cfg = "";
+   $cfg = [];
    if ($optionsraw != "")
       foreach (explode(",", $optionsraw) as $item) {
          if (strpos($item, ":") == FALSE)
